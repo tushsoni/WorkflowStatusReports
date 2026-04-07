@@ -1,0 +1,3544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Status - Folder Structure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --secondary: #8b5cf6;
+            --info: #06b6d4;
+        }
+
+        body {
+            background: url('Workflow.png') no-repeat center center fixed;
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .sidebar-overlay {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .slide-in-right {
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .tree-item {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .tree-item:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .expand-icon {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .expand-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .task-badge {
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 2px 6px;
+            font-size: 0.65rem;
+        }
+
+        .mandatory-badge {
+            background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+            color: #991b1b;
+        }
+
+        .optional-badge {
+            background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+            color: #1e3a8a;
+        }
+
+        .delayed-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.25);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .delayed-badge:hover {
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .delayed-badge i {
+            font-size: 0.75rem;
+            animation: pulse-delayed 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-delayed {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .on-time-indicator {
+            background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+            color: #166534;
+            font-weight: 600;
+        }
+
+        .completed-check {
+            animation: scaleIn 0.3s ease-in-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+
+        .module-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .shift-header {
+            background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+            display: block;
+            width: 100%;
+        }
+
+        .tile-item {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 6px;
+            margin: 2px 0;
+            transition: all 0.2s ease;
+        }
+
+        .tile-item:hover {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+
+        .scrollbar-hidden::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hidden {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .scrollbar-styled::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar-styled::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.5);
+            border-radius: 10px;
+        }
+
+        .scrollbar-styled::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .scrollbar-styled::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            width: 10px;
+        }
+
+        .scrollbar-styled {
+            scrollbar-width: thin;
+            scrollbar-color: #3b82f6 rgba(226, 232, 240, 0.5);
+        }
+
+        .collapse-btn {
+            transition: all 0.2s ease;
+        }
+
+        .collapse-btn:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transform: scale(1.05);
+        }
+
+        .report-expand-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+
+        .module-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .module-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 220px;
+            width: 220px;
+            overflow: visible;
+            display: none;
+            animation: slideDown 0.2s ease;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f0f9ff;
+            color: #3b82f6;
+        }
+
+        .dropdown-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .print-btn {
+            position: relative;
+        }
+
+        .print-btn button::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1f2937;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .print-btn button::before {
+            content: '';
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-bottom-color: #1f2937;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .print-btn button:hover::after {
+            opacity: 1;
+            visibility: visible;
+            bottom: -42px;
+        }
+
+        .print-btn button:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .report-stat-box {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .report-stat-box:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+
+        .report-stat-box .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .report-stat-box .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .report-table thead {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+        }
+
+        .report-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .report-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+
+        .report-table tbody tr:nth-child(odd) {
+            background-color: #f8fafc;
+        }
+
+        .report-table tbody tr:hover {
+            background-color: #eff6ff;
+        }
+
+        .report-export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .report-export-csv {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .report-export-csv:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .report-export-pdf {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .report-export-pdf:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background-color: #64748b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background-color: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(100, 116, 139, 0.3);
+        }
+
+        #reportDetailView {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        #reportsSidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 80px;
+            background-color: #082047;
+            transition: width 0.3s ease;
+            z-index: 45;
+            overflow: hidden;
+            margin-top: 0;
+        }
+
+        #reportsSidebar:hover {
+            width: 280px;
+        }
+
+        #reportsSidebar .sidebar-header {
+            background-color: #082047;
+            color: white;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            white-space: nowrap;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #reportsSidebar .sidebar-collapse-icon {
+            width: 40px;
+            height: 40px;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        #reportsSidebar .sidebar-icon {
+            width: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #reportsSidebar:hover .sidebar-icon {
+            width: 30px;
+            justify-content: flex-start;
+            padding-left: 16px;
+        }
+
+        #reportsSidebar .sidebar-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease;
+        }
+
+        #reportsSidebar:hover .sidebar-text {
+            opacity: 1;
+            width: auto;
+        }
+
+        #reportsSidebar .reports-nav-item {
+            color: white;
+            padding: 16px 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-left: 3px solid transparent;
+        }
+
+        #reportsSidebar .reports-nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #3b82f6;
+        }
+
+        #reportsSidebar .reports-nav-item i {
+            font-size: 20px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        #reportsSidebar .reports-nav-label {
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #reportsSidebar:hover .reports-nav-label {
+            opacity: 1;
+        }
+
+        #reportsMainContent {
+            position: absolute;
+            left: 80px;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- MAIN BACKGROUND CONTENT -->
+    <div class="min-h-screen relative">
+        <!-- Top Right Controls -->
+        <div class="fixed top-16 right-8 flex items-center gap-3 z-20">
+            <button id="reportsBtn" class="px-5 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2" style="background-color: #3b82f6;">
+                <i class="fas fa-file-alt text-sm"></i>
+                <span class="text-sm">Reports</span>
+            </button>
+            <button id="statusBtn" class="px-5 py-2 bg-gradient-to-r from-purple-700 to-purple-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2" style="background-color: #9333ea;">
+                <i class="fas fa-tasks text-sm"></i>
+                <span class="text-sm">Status & Tasks</span>
+                <span class="bg-orange-500 text-white text-xs font-bold rounded-full px-2 py-0.5 ml-1">12/49</span>
+            </button>
+            <button class="p-2.5 hover:bg-gradient-to-r from-orange-400 to-orange-500 hover:text-white text-slate-700 rounded-lg transition-all duration-200 hover:shadow-lg">
+            </button>
+        </div>
+    </div>
+
+    <!-- REPORTS PAGE -->
+    <div id="reportsPageOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40 sidebar-overlay transition-opacity duration-300" onclick="closeReportsPage()"></div>
+    <div id="reportsPage" class="fixed inset-0 h-screen w-screen transform translate-x-full transition-transform duration-400 z-50 flex hidden overflow-hidden" style="background: url('reportstab.png') no-repeat center center; background-size: cover; background-attachment: fixed;">
+        <!-- Top Header -->
+        <div class="fixed top-0 left-0 right-0 h-16 flex items-center px-6 z-30" style="background-color: #082047;">
+            <div class="flex items-center gap-3">
+                <img src="https://agcdn.altametrics.com/hw_prod_others/common/images/app_icon/workflow_logo.png" alt="Workflow" class="h-10 w-10">
+                <span class="text-sm font-semibold text-white">My App • Altametrics Growth</span>
+            </div>
+            <div class="ml-auto flex items-center gap-4">
+                <span class="text-xs text-gray-300">NAP'C • 11:05° AmericasLos Angles</span>
+                <button onclick="closeReportsPage()" class="ml-4 p-2 text-gray-300 hover:text-red-400 transition-colors">
+                    <i class="fas fa-xmark text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Collapsible Sidebar -->
+        <div id="reportsSidebar">
+            <!-- Sidebar Icon (Collapsed View) -->
+            <div class="sidebar-header">
+                <img src="https://agcdn.altametrics.com/hw_prod_others/common/images/app_icon/workflow_logo.png" alt="Workflow" class="sidebar-collapse-icon">
+            </div>
+
+            <!-- Sidebar Navigation -->
+            <div class="pt-4">
+                <div class="reports-nav-item" onclick="openReportDetail('summary')">
+                    <i class="fas fa-chart-bar text-blue-400"></i>
+                    <span class="reports-nav-label">Summary Report</span>
+                </div>
+                
+                <div class="reports-nav-item" onclick="openReportDetail('audit')">
+                    <i class="fas fa-history text-green-400"></i>
+                    <span class="reports-nav-label">Audit Report</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="reportsMainContent" class="flex-1 mt-16 flex flex-col overflow-hidden">
+            <!-- Reports List View -->
+            <div id="reportsListView" class="flex-1 overflow-y-auto flex items-center justify-center p-8">
+                <div class="max-w-2xl w-full">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Workflow Summary Report Card -->
+                        <div class="bg-white rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer border-l-4 border-blue-500" onclick="openReportDetail('summary')">
+                            <div class="p-6">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="bg-blue-100 p-3 rounded-lg">
+                                        <i class="fas fa-file-alt text-2xl text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-slate-800">Workflow Summary Report</h3>
+                                        <p class="text-slate-500 text-xs">Status including task completion rates</p>
+                                    </div>
+                                </div>
+                                <p class="text-slate-600 text-xs mb-4">Get a comprehensive overview of your workflow status including task completion rates, mandatory vs optional tasks, and module-wise breakdown.</p>
+                            </div>
+                        </div>
+
+                        <!-- Workflow Audit Report Card -->
+                        <div class="bg-white rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer border-l-4 border-green-500" onclick="openReportDetail('audit')">
+                            <div class="p-6">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="bg-green-100 p-3 rounded-lg">
+                                        <i class="fas fa-file-alt text-2xl text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-slate-800">Workflow Audit Report</h3>
+                                        <p class="text-slate-500 text-xs">Track audit trails and completion history</p>
+                                    </div>
+                                </div>
+                                <p class="text-slate-600 text-xs mb-4">Track the audit trail of task completions, including timestamps, user information, completion status changes, and activity history.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Detail View -->
+            <div id="reportDetailView" class="hidden flex-1 overflow-y-auto">
+                <!-- Detail content will be rendered by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40 sidebar-overlay transition-opacity duration-300" onclick="closeSidebar()"></div>
+
+    <div id="sidebar" class="fixed right-0 top-0 h-screen w-full md:w-[600px] bg-white shadow-2xl transform translate-x-full transition-transform duration-400 z-50 flex flex-col hidden">
+        <!-- Sidebar Header -->
+        <div class="text-slate-800 p-5 sticky top-0 z-10 shadow-md overflow-visible" style="background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%); border-bottom: 1px solid #e2e8f0;">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-100 bg-opacity-60 p-2.5 rounded-lg backdrop-blur-sm">
+                        <i class="fas fa-tasks text-xl text-blue-600"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800">Workflow Status</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 pr-2 border-r border-slate-200">
+                        <input type="checkbox" id="expandAllCheckbox" class="w-5 h-5 accent-blue-600 cursor-pointer" onchange="toggleExpandAll(this.checked)">
+                        <label for="expandAllCheckbox" class="cursor-pointer text-sm font-semibold text-slate-700 whitespace-nowrap">Expand All Shifts</label>
+                    </div>
+                    <div class="print-btn relative">
+                        <button id="printDropdownBtn" class="p-2 text-slate-600 hover:bg-slate-200 hover:bg-opacity-50 rounded-lg transition-all duration-200 flex items-center gap-1" onclick="togglePrintDropdown(event)" data-tooltip="Print">
+                            <i class="fas fa-print text-lg"></i>
+                        </button>
+                        <div id="printDropdown" class="dropdown-menu right-0 mt-2">
+                            <div class="dropdown-item" onclick="exportToCSV()">
+                                <i class="fas fa-file-csv text-green-600"></i>
+                                <span>Export CSV</span>
+                            </div>
+                            <div class="dropdown-item" onclick="exportToPDF()">
+                                <i class="fas fa-file-pdf text-red-600"></i>
+                                <span>Export PDF</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="closeSidebarBtn" class="p-2 rounded-lg transition-all duration-200 hover:bg-red-100" onclick="closeSidebar()">
+                        <i class="fas fa-xmark text-xl text-red-600 hover:text-red-700"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-3 shadow-sm border border-slate-100">
+                <div class="grid grid-cols-7 gap-2">
+                    <!-- Total -->
+                    <div class="text-center">
+                        <div class="flex justify-center mb-1.5">
+                            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);">
+                                <i class="fas fa-bars text-white text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 font-medium mb-0.5">Total</div>
+                        <div class="text-lg font-bold text-slate-800" id="headerTotal">49</div>
+                    </div>
+                    <!-- Completed -->
+                    <div class="text-center">
+                        <div class="flex justify-center mb-1.5">
+                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);">
+                                <i class="fas fa-check text-white text-sm" style="font-weight: 900;"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 font-medium mb-0.5">Completed</div>
+                        <div class="text-lg font-bold text-slate-800" id="headerCompleted">12</div>
+                    </div>
+                    <!-- Delayed -->
+                    <div class="text-center">
+                        <div class="flex justify-center mb-1.5">
+                            <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);">
+                                <i class="fas fa-flag text-white text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 font-medium mb-0.5">Delayed</div>
+                        <div class="text-lg font-bold text-slate-800" id="headerDelayed">0</div>
+                    </div>
+                    <!-- Pending -->
+                    <div class="text-center">
+                        <div class="flex justify-center mb-1.5">
+                            <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);">
+                                <i class="fas fa-clock text-white text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 font-medium mb-0.5">Pending</div>
+                        <div class="text-lg font-bold text-slate-800" id="headerPending">37</div>
+                    </div>
+                    <!-- Mandatory -->
+                    <div class="text-center">
+                        <div class="flex justify-center mb-1.5">
+                            <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(139, 92, 246, 0.35);">
+                                <i class="fas fa-fire text-white text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 font-medium mb-0.5">Mandatory</div>
+                        <div class="text-lg font-bold text-slate-800" id="headerMandatory">16</div>
+                    </div>
+                    <!-- Optional -->
+                    <div class="text-center">
+                        <div class="flex justify-center mb-1.5">
+                            <div style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(6, 182, 212, 0.35);">
+                                <i class="fas fa-star text-white text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 font-medium mb-0.5">Optional</div>
+                        <div class="text-lg font-bold text-slate-800" id="headerOptional">33</div>
+                    </div>
+                    <!-- Progress -->
+                    <div class="text-center">
+                        <div class="flex justify-center mb-1.5">
+                            <div style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; box-shadow: 0 2px 6px rgba(236, 72, 153, 0.35);">
+                                <i class="fas fa-chart-pie text-white text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 font-medium mb-0.5">Progress</div>
+                        <div class="text-lg font-bold text-slate-800" id="headerProgress">22%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Content -->
+        <div class="flex-1 overflow-y-auto scrollbar-styled">
+            <div class="p-4" id="sidebarContent">
+                <!-- This will be populated by JavaScript -->
+            </div>
+        </div>
+
+
+    </div>
+
+    <script>
+        // Data from your JSON
+        const workflowData = {
+            "sitePk": 1283,
+            "cwkFlowPk": 102,
+            "custWFMainPK": 4,
+            "previousDayOpen": false,
+            "date": "2026-04-06",
+            "edit": true,
+            "tiles": [
+                {
+                    "primaryKey": 21,
+                    "id": "FORECASTED_SALES",
+                    "key": "fctSales",
+                    "name": "Forecasted Sales",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-zipForecast-o",
+                    "formatter": "DOLLAR"
+                },
+                {
+                    "primaryKey": 22,
+                    "id": "ACTUAL_SALES",
+                    "key": "salesDollar",
+                    "name": "Actual Sales",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-actualSales",
+                    "formatter": "DOLLAR"
+                },
+                {
+                    "primaryKey": 24,
+                    "id": "LABOR_PERCENT",
+                    "key": "laborPercentRpt",
+                    "name": "Labor %",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-laborPercent",
+                    "formatter": "PERCENT"
+                },
+                {
+                    "primaryKey": 27,
+                    "id": "LABOR_DOLLAR",
+                    "key": "ttlLabourDollars",
+                    "name": "Labor $",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-laborDollar",
+                    "formatter": "DOLLAR"
+                },
+                {
+                    "primaryKey": 26,
+                    "id": "TIME_LOSS",
+                    "key": "timeLossDollar",
+                    "name": "Time Loss",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-timeLossSummary-fill",
+                    "formatter": "DOLLAR"
+                },
+                {
+                    "primaryKey": 25,
+                    "id": "SCHEDULE_DOLLARS",
+                    "key": "schDollar",
+                    "name": "Schedule Dollars",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-laborBudget",
+                    "formatter": "DOLLAR"
+                },
+                {
+                    "primaryKey": 23,
+                    "id": "SCHEDULE_HRS",
+                    "key": "ttlMnts",
+                    "name": "Schedule Hours",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-zipSchedules-o",
+                    "formatter": "HRS"
+                },
+                {
+                    "primaryKey": 28,
+                    "id": "ACTUAL_USAGE_PERCENT",
+                    "key": "actualUsagePer",
+                    "name": "Actual Usage %",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-zipInventory-o",
+                    "formatter": "PERCENT"
+                },
+                {
+                    "primaryKey": 29,
+                    "id": "IDEAL_USAGE_PERCENT",
+                    "key": "idealUsagePer",
+                    "name": "Ideal Usage %",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-zipInventory-o",
+                    "formatter": "PERCENT"
+                },
+                {
+                    "primaryKey": 30,
+                    "id": "VARIANCE_PERCENT",
+                    "key": "variancePer",
+                    "name": "Usage Variance %",
+                    "value": "NA",
+                    "yestdayValue": "NA",
+                    "wtdValue": "NA",
+                    "icon": "fn-global-zipInventory-o",
+                    "formatter": "PERCENT"
+                }
+            ],
+            "wfDay": {
+                "stats": {
+                    "completed": false,
+                    "totalTasks": 49,
+                    "mandatoryTasks": 16,
+                    "optionalTasks": 33,
+                    "completedTasks": 13,
+                    "mandatoryCompletedTasks": 1,
+                    "optionalCompletedTasks": 12,
+                    "noOfObjects": 0
+                },
+                "shifts": [
+                    {
+                        "shiftEndIndex": 44,
+                        "index": 1,
+                        "name": "Start of Day",
+                        "dueTime": "11:00 AM",
+                        "stat": {
+                            "completed": false,
+                            "totalTasks": 26,
+                            "mandatoryTasks": 8,
+                            "optionalTasks": 18,
+                            "completedTasks": 7,
+                            "mandatoryCompletedTasks": 1,
+                            "optionalCompletedTasks": 6,
+                            "noOfObjects": 26
+                        },
+                        "modules": [
+                            {
+                                "active": true,
+                                "index": 1,
+                                "name": "Forecast",
+                                "icon": "fn-global-review-forecast-fill",
+                                "stats": {
+                                    "completed": false,
+                                    "totalTasks": 2,
+                                    "mandatoryTasks": 0,
+                                    "optionalTasks": 2,
+                                    "completedTasks": 2,
+                                    "mandatoryCompletedTasks": 0,
+                                    "optionalCompletedTasks": 2,
+                                    "noOfObjects": 0
+                                },
+                                "tasks": [
+                                    {
+                                        "id": "REVIEW_FORECAST",
+                                        "index": 1,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "10:45 AM",
+                                        "isDelayed": false,
+                                        "name": "Review Forecast",
+                                        "imgUrl": "fn-global-review-forecast-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "WEEKLY_CSH_MAIN",
+                                        "index": 2,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "12:30 PM",
+                                        "isDelayed": true,
+                                        "name": "Actual Sales",
+                                        "imgUrl": "fn-global-dollar-o",
+                                        "noOfObjects": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "index": 2,
+                                "name": "Food Management",
+                                "icon": "fn-global-food-management-fill",
+                                "stats": {
+                                    "completed": false,
+                                    "totalTasks": 11,
+                                    "mandatoryTasks": 2,
+                                    "optionalTasks": 9,
+                                    "completedTasks": 3,
+                                    "mandatoryCompletedTasks": 0,
+                                    "optionalCompletedTasks": 3,
+                                    "noOfObjects": 13
+                                },
+                                "tasks": [
+                                    {
+                                        "id": "UN_POSTED_INV",
+                                        "index": 3,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "10:15 AM",
+                                        "isDelayed": false,
+                                        "name": "Unposted Inventory",
+                                        "imgUrl": "fn-global-unposted-inventory-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "UN_POSTED_INVOICE",
+                                        "index": 4,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Unposted Invoice",
+                                        "imgUrl": "fn-global-unposted-credit-fill",
+                                        "noOfObjects": 4
+                                    },
+                                    {
+                                        "id": "UN_POSTED_WASTE",
+                                        "index": 5,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Unposted Waste",
+                                        "imgUrl": "fn-global-delete-o",
+                                        "noOfObjects": 2
+                                    },
+                                    {
+                                        "id": "UN_POSTED_TRF_IN",
+                                        "index": 6,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Unposted Transfer",
+                                        "imgUrl": "fn-global-transactions-status",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "UN_POSTED_CREDIT",
+                                        "index": 7,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Unposted Credits",
+                                        "imgUrl": "fn-global-unposted-credit-fill",
+                                        "noOfObjects": 3
+                                    },
+                                    {
+                                        "id": "PREP_SHEET",
+                                        "index": 8,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "10:30 AM",
+                                        "isDelayed": false,
+                                        "name": "Prep Sheet",
+                                        "imgUrl": "fn-global-prep-sheet-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "SUBMIT_ORDER",
+                                        "index": 9,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "11:15 AM",
+                                        "isDelayed": false,
+                                        "name": "Take Order",
+                                        "imgUrl": "fn-global-take-order-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "TAKE_INVENTORY",
+                                        "index": 10,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Take Inventory",
+                                        "imgUrl": "fn-global-take-inventory-fill",
+                                        "noOfObjects": 1
+                                    },
+                                    {
+                                        "id": "INV_COUNT_ALERT",
+                                        "index": 11,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Inventory Alerts",
+                                        "imgUrl": "fn-global-bell-alerts-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "INV_VIT_COUNT_ALERT",
+                                        "index": 12,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Inventory VIT Alerts",
+                                        "imgUrl": "fn-global-bell-alerts-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "ORDER_QUNANTITY_ALERT",
+                                        "index": 13,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Ordering Alerts",
+                                        "imgUrl": "fn-global-ordering-alert-fill",
+                                        "noOfObjects": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "index": 3,
+                                "name": "Labor Management",
+                                "icon": "fn-global-labor-management-fill",
+                                "stats": {
+                                    "completed": false,
+                                    "totalTasks": 5,
+                                    "mandatoryTasks": 3,
+                                    "optionalTasks": 2,
+                                    "completedTasks": 2,
+                                    "mandatoryCompletedTasks": 1,
+                                    "optionalCompletedTasks": 1,
+                                    "noOfObjects": 0
+                                },
+                                "tasks": [
+                                    {
+                                        "id": "SCHEDULE",
+                                        "index": 14,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "10:50 AM",
+                                        "isDelayed": false,
+                                        "name": "Schedule",
+                                        "imgUrl": "fn-global-schedule-time-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "TIME_OFF_REQUEST_APPROVAL",
+                                        "index": 15,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Time Off Request",
+                                        "imgUrl": "fn-global-time-off-request-fill",
+                                        "noOfObjects": 2
+                                    },
+                                    {
+                                        "id": "AVAILABILITY_REQUEST_APPROVAL",
+                                        "index": 16,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "11:20 AM",
+                                        "isDelayed": false,
+                                        "name": "Availability Request",
+                                        "imgUrl": "fn-global-availability-request-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "SWAP_SHIFT_APPROVAL",
+                                        "index": 17,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Swap Shift Approval",
+                                        "imgUrl": "fn-global-long-hour-shift-fill",
+                                        "noOfObjects": 3
+                                    },
+                                    {
+                                        "id": "PENDING_EMPLOYEES",
+                                        "index": 18,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Pending Employees",
+                                        "imgUrl": "fn-global-pending-request-fill",
+                                        "noOfObjects": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "index": 4,
+                                "name": "Payroll Management",
+                                "icon": "fn-global-payrollMgmt",
+                                "stats": {
+                                    "completed": false,
+                                    "totalTasks": 8,
+                                    "mandatoryTasks": 3,
+                                    "optionalTasks": 5,
+                                    "completedTasks": 3,
+                                    "mandatoryCompletedTasks": 0,
+                                    "optionalCompletedTasks": 3,
+                                    "noOfObjects": 0
+                                },
+                                "tasks": [
+                                    {
+                                        "id": "NON_POSTED_PAYROLL",
+                                        "index": 20,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Non Posted Payroll",
+                                        "imgUrl": "fn-global-non-posted-payroll-fill",
+                                        "noOfObjects": 1
+                                    },
+                                    {
+                                        "id": "PUNCH_FOR_APPROVAL",
+                                        "index": 21,
+                                        "mandatory": true,
+                                        "completed": true,
+                                        "completedTime": "11:00 AM",
+                                        "isDelayed": false,
+                                        "name": "Punch Approvals",
+                                        "imgUrl": "fn-global-punch-approval-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "PREV_TIMELOSS",
+                                        "index": 22,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "10:20 AM",
+                                        "isDelayed": false,
+                                        "name": "Previous Day Time Loss Summary",
+                                        "imgUrl": "fn-global-timeLossSummary-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "PRE_DAY_PUNCHES",
+                                        "index": 23,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "10:40 AM",
+                                        "isDelayed": false,
+                                        "name": "Previous Day Punches",
+                                        "imgUrl": "fn-global-pre-day-punches-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "PENDING_PUNCH_ACK",
+                                        "index": 24,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Pending Punch Acknowledgement",
+                                        "imgUrl": "fn-global-pending-punch-fill",
+                                        "noOfObjects": 3
+                                    },
+                                    {
+                                        "id": "REVIEW_MISMATCH_PUNCH",
+                                        "index": 25,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "11:05 AM",
+                                        "isDelayed": false,
+                                        "name": "Mismatch Punches",
+                                        "imgUrl": "fn-global-pending-punch-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "REVIEW_OVERLAP_PUNCH",
+                                        "index": 26,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Overlap Punches",
+                                        "imgUrl": "fn-global-overlap-punches-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "REVIEW_LONGHRS_SHIFT",
+                                        "index": 27,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Long Hour Shift",
+                                        "imgUrl": "fn-global-long-hour-shift-fill",
+                                        "noOfObjects": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "expand": true
+                    },
+                    {
+                        "shiftEndIndex": 90,
+                        "index": 2,
+                        "name": "End of Day",
+                        "dueTime": "10:00 PM",
+                        "stat": {
+                            "completed": false,
+                            "totalTasks": 23,
+                            "mandatoryTasks": 8,
+                            "optionalTasks": 15,
+                            "completedTasks": 6,
+                            "mandatoryCompletedTasks": 0,
+                            "optionalCompletedTasks": 6,
+                            "noOfObjects": 0
+                        },
+                        "modules": [
+                            {
+                                "active": true,
+                                "index": 1,
+                                "name": "Forecast",
+                                "icon": "fn-global-review-forecast-fill",
+                                "stats": {
+                                    "completed": false,
+                                    "totalTasks": 1,
+                                    "mandatoryTasks": 0,
+                                    "optionalTasks": 1,
+                                    "completedTasks": 1,
+                                    "mandatoryCompletedTasks": 0,
+                                    "optionalCompletedTasks": 1,
+                                    "noOfObjects": 0
+                                },
+                                "tasks": [
+                                    {
+                                        "id": "WEEKLY_CSH_MAIN",
+                                        "index": 28,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "9:30 PM",
+                                        "isDelayed": false,
+                                        "name": "Actual Sales",
+                                        "imgUrl": "fn-global-dollar-o",
+                                        "noOfObjects": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "index": 2,
+                                "name": "Food Management",
+                                "icon": "fn-global-food-management-fill",
+                                "stats": {
+                                    "completed": false,
+                                    "totalTasks": 11,
+                                    "mandatoryTasks": 3,
+                                    "optionalTasks": 8,
+                                    "completedTasks": 4,
+                                    "mandatoryCompletedTasks": 0,
+                                    "optionalCompletedTasks": 4,
+                                    "noOfObjects": 0
+                                },
+                                "tasks": [
+                                    {
+                                        "id": "UN_POSTED_INV",
+                                        "index": 29,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Unposted Inventory",
+                                        "imgUrl": "fn-global-unposted-inventory-fill",
+                                        "noOfObjects": 1
+                                    },
+                                    {
+                                        "id": "UN_POSTED_INVOICE",
+                                        "index": 30,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Unposted Invoice",
+                                        "imgUrl": "fn-global-unposted-credit-fill",
+                                        "noOfObjects": 4
+                                    },
+                                    {
+                                        "id": "UN_POSTED_WASTE",
+                                        "index": 31,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Unposted Waste",
+                                        "imgUrl": "fn-global-delete-o",
+                                        "noOfObjects": 2
+                                    },
+                                    {
+                                        "id": "UN_POSTED_TRF_IN",
+                                        "index": 32,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Unposted Transfer",
+                                        "imgUrl": "fn-global-transactions-status",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "UN_POSTED_CREDIT",
+                                        "index": 33,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Unposted Credits",
+                                        "imgUrl": "fn-global-unposted-credit-fill",
+                                        "noOfObjects": 3
+                                    },
+                                    {
+                                        "id": "PREP_SHEET",
+                                        "index": 34,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "11:00 PM",
+                                        "isDelayed": true,
+                                        "name": "Prep Sheet",
+                                        "imgUrl": "fn-global-prep-sheet-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "SUBMIT_ORDER",
+                                        "index": 35,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Take Order",
+                                        "imgUrl": "fn-global-take-order-fill",
+                                        "noOfObjects": 2
+                                    },
+                                    {
+                                        "id": "TAKE_INVENTORY",
+                                        "index": 36,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Take Inventory",
+                                        "imgUrl": "fn-global-take-inventory-fill",
+                                        "noOfObjects": 1
+                                    },
+                                    {
+                                        "id": "INV_COUNT_ALERT",
+                                        "index": 37,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "9:45 PM",
+                                        "isDelayed": false,
+                                        "name": "Inventory Alerts",
+                                        "imgUrl": "fn-global-bell-alerts-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "INV_VIT_COUNT_ALERT",
+                                        "index": 38,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "9:50 PM",
+                                        "isDelayed": false,
+                                        "name": "Inventory VIT Alerts",
+                                        "imgUrl": "fn-global-bell-alerts-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "ORDER_QUNANTITY_ALERT",
+                                        "index": 39,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "10:15 PM",
+                                        "isDelayed": true,
+                                        "name": "Ordering Alerts",
+                                        "imgUrl": "fn-global-ordering-alert-fill",
+                                        "noOfObjects": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "index": 3,
+                                "name": "Labor Management",
+                                "icon": "fn-global-labor-management-fill",
+                                "stats": {
+                                    "completed": false,
+                                    "totalTasks": 5,
+                                    "mandatoryTasks": 2,
+                                    "optionalTasks": 3,
+                                    "completedTasks": 2,
+                                    "mandatoryCompletedTasks": 0,
+                                    "optionalCompletedTasks": 2,
+                                    "noOfObjects": 6
+                                },
+                                "tasks": [
+                                    {
+                                        "id": "SCHEDULE",
+                                        "index": 40,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Schedule",
+                                        "imgUrl": "fn-global-schedule-time-fill",
+                                        "noOfObjects": 1
+                                    },
+                                    {
+                                        "id": "TIME_OFF_REQUEST_APPROVAL",
+                                        "index": 41,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Time Off Request",
+                                        "imgUrl": "fn-global-time-off-request-fill",
+                                        "noOfObjects": 2
+                                    },
+                                    {
+                                        "id": "AVAILABILITY_REQUEST_APPROVAL",
+                                        "index": 42,
+                                        "mandatory": false,
+                                        "completed": true,
+                                        "completedTime": "9:40 PM",
+                                        "isDelayed": false,
+                                        "name": "Availability Request",
+                                        "imgUrl": "fn-global-availability-request-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "SWAP_SHIFT_APPROVAL",
+                                        "index": 43,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Swap Shift Approval",
+                                        "imgUrl": "fn-global-long-hour-shift-fill",
+                                        "noOfObjects": 3
+                                    },
+                                    {
+                                        "id": "PENDING_EMPLOYEES",
+                                        "index": 44,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "completedTime": "9:55 PM",
+                                        "isDelayed": false,
+                                        "name": "Pending Employees",
+                                        "imgUrl": "fn-global-pending-request-fill",
+                                        "noOfObjects": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "index": 4,
+                                "name": "Payroll Management",
+                                "icon": "fn-global-payrollMgmt",
+                                "stats": {
+                                    "completed": false,
+                                    "totalTasks": 6,
+                                    "mandatoryTasks": 3,
+                                    "optionalTasks": 3,
+                                    "completedTasks": 0,
+                                    "mandatoryCompletedTasks": 0,
+                                    "optionalCompletedTasks": 0,
+                                    "noOfObjects": 3
+                                },
+                                "tasks": [
+                                    {
+                                        "id": "PUNCH_FOR_APPROVAL",
+                                        "index": 46,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Punch Approvals",
+                                        "imgUrl": "fn-global-punch-approval-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "PENDING_PUNCH_ACK",
+                                        "index": 48,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Pending Punch Acknowledgement",
+                                        "imgUrl": "fn-global-pending-punch-fill",
+                                        "noOfObjects": 3
+                                    },
+                                    {
+                                        "id": "REVIEW_OPEN_PUNCH",
+                                        "index": 49,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Review Open Punches",
+                                        "imgUrl": "fn-global-review-open-punches-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "REVIEW_MISMATCH_PUNCH",
+                                        "index": 50,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Mismatch Punches",
+                                        "imgUrl": "fn-global-pending-punch-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "REVIEW_OVERLAP_PUNCH",
+                                        "index": 51,
+                                        "mandatory": true,
+                                        "completed": false,
+                                        "name": "Overlap Punches",
+                                        "imgUrl": "fn-global-overlap-punches-fill",
+                                        "noOfObjects": 0
+                                    },
+                                    {
+                                        "id": "REVIEW_LONGHRS_SHIFT",
+                                        "index": 52,
+                                        "mandatory": false,
+                                        "completed": false,
+                                        "name": "Long Hour Shift",
+                                        "imgUrl": "fn-global-long-hour-shift-fill",
+                                        "noOfObjects": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "expand": true
+                    }
+                ]
+            }
+        };
+
+        // Module Icon Mapping
+        const moduleIconMap = {
+            'Forecast': 'fa-chart-line bg-blue-100 text-blue-600',
+            'Food Management': 'fa-utensils bg-orange-100 text-orange-600',
+            'Labor Management': 'fa-users bg-purple-100 text-purple-600',
+            'Payroll Management': 'fa-dollar-sign bg-green-100 text-green-600'
+        };
+
+        function getModuleIcon(moduleName) {
+            return moduleIconMap[moduleName] || 'fa-folder bg-gray-100 text-gray-600';
+        }
+
+        function calculateProgress(completed, total) {
+            return total === 0 ? 0 : Math.round((completed / total) * 100);
+        }
+
+        function updateHeaderStats() {
+            // Calculate totals across all shifts
+            let totalTasks = 0;
+            let completedTasks = 0;
+            let mandatoryTasks = 0;
+            let optionalTasks = 0;
+            let delayedTasks = 0;
+
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        totalTasks++;
+                        if (task.completed) {
+                            completedTasks++;
+                            if (task.isDelayed) {
+                                delayedTasks++;
+                            }
+                        }
+                        if (task.mandatory) {
+                            mandatoryTasks++;
+                        } else {
+                            optionalTasks++;
+                        }
+                    });
+                });
+            });
+
+            const pendingTasks = totalTasks - completedTasks;
+            const progressPercent = calculateProgress(completedTasks, totalTasks);
+
+            // Update header with calculated values
+            document.getElementById('headerTotal').textContent = totalTasks;
+            document.getElementById('headerCompleted').textContent = completedTasks;
+            document.getElementById('headerDelayed').textContent = delayedTasks;
+            document.getElementById('headerPending').textContent = pendingTasks;
+            document.getElementById('headerMandatory').textContent = mandatoryTasks;
+            document.getElementById('headerOptional').textContent = optionalTasks;
+            document.getElementById('headerProgress').textContent = progressPercent + '%';
+            
+            // Update status button badge
+            const statusBadge = document.querySelector('#statusBtn span:last-child');
+            if (statusBadge) {
+                statusBadge.textContent = completedTasks + '/' + totalTasks;
+            }
+        }
+
+        function renderSidebar() {
+            const content = document.getElementById('sidebarContent');
+            let html = '';
+
+            // Add Expand/Collapse All Toggle is now in header
+            // Sidebar content starts below
+            html += ``;
+
+            workflowData.wfDay.shifts.forEach(shift => {
+                const progress = calculateProgress(shift.stat.completedTasks, shift.stat.totalTasks);
+                const pendingTasks = shift.stat.totalTasks - shift.stat.completedTasks;
+                const shiftColor = shift.index === 1 ? 'border-blue-500' : 'border-purple-500';
+                const shiftBg = shift.index === 1 ? 'bg-blue-50' : 'bg-purple-50';
+                const shiftId = `shift-${shift.index}`;
+                
+                // Count delayed tasks in this shift
+                let delayedInShift = 0;
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        if (task.completed && task.isDelayed) {
+                            delayedInShift++;
+                        }
+                    });
+                });
+
+                html += `
+                    <div class="mb-2 tree-item overflow-hidden">
+                        <!-- Shift Header -->
+                        <div class="shift-header p-2 cursor-pointer hover:bg-opacity-80 transition-all rounded-lg border border-slate-200" onclick="toggleTreeNode(event, '${shiftId}')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <i class="fas fa-chevron-right expand-icon text-lg transition-transform" style="transform: rotate(0deg)"></i>
+                                    <i class="fas ${shift.index === 1 ? 'fa-sunrise' : 'fa-sunset'} text-lg"></i>
+                                    <div>
+                                        <div class="font-semibold text-base flex items-center gap-2">
+                                            ${shift.name}
+                                            <span class="px-2 py-0.5 bg-gradient-to-r ${shift.index === 1 ? 'from-blue-100 to-blue-50' : 'from-purple-100 to-purple-50'} border ${shift.index === 1 ? 'border-blue-300' : 'border-purple-300'} rounded-full text-xs font-medium ${shift.index === 1 ? 'text-blue-700' : 'text-purple-700'} whitespace-nowrap">
+                                                Due: ${shift.dueTime}
+                                            </span>
+                                            ${delayedInShift > 0 ? `<span class="delayed-badge flex items-center gap-1 text-xs"><i class="fas fa-exclamation-triangle text-xs"></i>${delayedInShift} Delayed</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-bold">${progress}%</div>
+                                    <div class="text-xs opacity-75">${shift.stat.completedTasks}/${shift.stat.totalTasks}</div>
+                                </div>
+                            </div>
+                            <!-- Shift Progress Bar -->
+                            <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+                                <div class="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Shift Content -->
+                        <div id="${shiftId}" class="shift-content bg-white bg-opacity-50 p-2 space-y-1.5 max-h-0 transition-all duration-300 overflow-hidden" style="max-height: 0px; visibility: hidden;">
+                            <!-- Shift Stats -->
+                            <div class="grid grid-cols-6 gap-1 mb-2">
+                                <div class="stat-card bg-blue-50 border-blue-100">
+                                    <div class="text-xs text-blue-600 font-bold">${shift.stat.totalTasks}</div>
+                                    <div class="text-xs text-slate-600">Total</div>
+                                </div>
+                                 <div class="stat-card bg-green-50 border-green-100">
+                                    <div class="text-xs text-green-600 font-bold">${shift.stat.completedTasks}</div>
+                                    <div class="text-xs text-slate-600">Done</div>
+                                </div>
+                                <div class="stat-card bg-yellow-50 border-yellow-100">
+                                    <div class="text-xs text-yellow-600 font-bold">${pendingTasks}</div>
+                                    <div class="text-xs text-slate-600">Pending</div>
+                                </div>
+                                <div class="stat-card bg-orange-50 border-orange-100">
+                                    <div class="text-xs text-orange-600 font-bold">${delayedInShift}</div>
+                                    <div class="text-xs text-slate-600">Delayed</div>
+                                </div>
+                                <div class="stat-card bg-red-50 border-red-100">
+                                    <div class="text-xs text-red-600 font-bold">${shift.stat.mandatoryTasks}</div>
+                                    <div class="text-xs text-slate-600">Mandatory</div>
+                                </div>
+                                <div class="stat-card bg-blue-50 border-blue-100">
+                                    <div class="text-xs text-blue-400 font-bold">${shift.stat.optionalTasks}</div>
+                                    <div class="text-xs text-slate-600">Optional</div>
+                                </div>
+                            </div>
+
+                            <!-- Modules -->
+                            ${shift.modules.map(module => renderModule(module, shift.index)).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            content.innerHTML = html;
+            updateHeaderStats();
+        }
+
+        function renderModule(module, shiftIndex) {
+            const progress = calculateProgress(module.stats.completedTasks, module.stats.totalTasks);
+            const pendingTasks = module.stats.totalTasks - module.stats.completedTasks;
+            const isExpanded = true;
+            const moduleId = `module-${shiftIndex}-${module.index}`;
+            const moduleIconClasses = getModuleIcon(module.name);
+
+            return `
+                <div class="mb-1 rounded-lg border border-slate-200 overflow-hidden bg-white">
+                    <div class="module-header p-1.5 bg-gradient-to-r from-slate-50 to-slate-100 cursor-pointer hover:from-slate-100 hover:to-slate-200 transition-all" onclick="toggleTreeNode(event, '${moduleId}')">
+                        <div class="flex items-center gap-2 justify-between">
+                            <div class="flex items-center gap-2 flex-1">
+                                <i class="fas fa-chevron-right expand-icon text-sm transition-transform" style="transform: rotate(90deg)"></i>
+                                <i class="fas module-icon ${moduleIconClasses}"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-sm text-slate-800 truncate">${module.name}</div>
+                                </div>
+                            </div>
+                            <div class="text-xs text-slate-500 ml-2 whitespace-nowrap">${progress}% • ${module.stats.completedTasks}/${module.stats.totalTasks}</div>
+                        </div>
+                        <!-- Module Progress -->
+                        <div class="w-full bg-slate-200 rounded-full h-0.5 mt-1">
+                            <div class="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Module Tasks -->
+                    <div id="${moduleId}" class="module-content bg-white p-1 grid grid-cols-4 gap-1 max-h-[1000px] transition-all duration-300 overflow-hidden">
+                        ${renderTasksInGrid(module.tasks)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTasksInGrid(tasks) {
+            let html = '';
+            for (let i = 0; i < tasks.length; i++) {
+                html += renderTask(tasks[i]);
+            }
+            return html;
+        }
+
+        function renderTask(task, index) {
+            const badgeClass = task.mandatory ? 'mandatory-badge' : 'optional-badge';
+            // Mandatory tasks with records cannot be marked as completed
+            const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+            const taskIcon = isCompleted ? 'fa-check-circle text-green-600' : 'fa-circle-thin text-slate-300';
+            const taskBg = isCompleted ? (task.isDelayed ? 'bg-orange-50' : 'bg-green-50') : 'hover:bg-slate-50';
+            const delayedBadge = isCompleted && task.isDelayed ? `<span class="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded font-semibold">Delayed</span>` : '';
+
+            return `
+                <div class="task-item p-0.5 rounded-md ${taskBg} border ${isCompleted && task.isDelayed ? 'border-orange-400' : 'border-slate-300'} transition-all hover:border-slate-400 flex flex-col gap-0.5 group min-h-[58px] justify-between" title="${task.name}">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas ${taskIcon} text-lg transition-colors flex-shrink-0"></i>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-medium text-slate-700 group-hover:text-slate-900 truncate">${task.name}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 flex-wrap mt-1">
+                            <span class="task-badge ${badgeClass} text-xs">${task.mandatory ? 'M' : 'O'}</span>
+                            ${task.noOfObjects > 0 ? `<span class="text-xs bg-slate-100 text-slate-700 px-1 py-0 rounded">×${task.noOfObjects}</span>` : ''}
+                            ${delayedBadge}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleShift(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.expand-icon');
+            
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.classList.remove('rotated');
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.classList.add('rotated');
+            }
+        }
+
+        function toggleTreeNode(event, nodeId) {
+            event.stopPropagation();
+            const node = document.getElementById(nodeId);
+            const icon = event.currentTarget.querySelector('.expand-icon');
+            
+            if (!node) return;
+
+            if (parseFloat(node.style.maxHeight) > 0) {
+                // Collapse
+                node.style.maxHeight = '0px';
+                node.style.overflow = 'hidden';
+                node.style.visibility = 'hidden';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Expand
+                node.style.visibility = 'visible';
+                node.style.maxHeight = node.scrollHeight + 'px';
+                icon.style.transform = 'rotate(90deg)';
+                // Recalculate for nested content
+                setTimeout(() => {
+                    const newHeight = node.scrollHeight;
+                    node.style.maxHeight = (newHeight + 50) + 'px';
+                }, 100);
+            }
+        }
+
+        function toggleModule(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.expand-icon');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.classList.add('rotated');
+            } else {
+                content.style.display = 'none';
+                icon.classList.remove('rotated');
+            }
+        }
+
+        function toggleTask(taskElement) {
+            event.stopPropagation(); // Prevent bubbling to parent elements
+            
+            const taskId = taskElement.getAttribute('data-task-id');
+            
+            // Find and update the task in the data model
+            let taskFound = false;
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        if (task.id === taskId) {
+                            task.completed = !task.completed;
+                            taskFound = true;
+                        }
+                    });
+                });
+            });
+            
+            if (taskFound) {
+                // Store which shifts are currently expanded
+                const expandedShifts = [];
+                workflowData.wfDay.shifts.forEach(shift => {
+                    const elem = document.getElementById(`shift-${shift.index}`);
+                    if (elem && parseFloat(elem.style.maxHeight) > 0) {
+                        expandedShifts.push(shift.index);
+                    }
+                });
+                
+                // Update the visual display
+                taskElement.classList.toggle('bg-green-50');
+                const icon = taskElement.querySelector('i:first-child');
+                icon.classList.toggle('fa-circle-thin');
+                icon.classList.toggle('fa-check-circle');
+                icon.classList.toggle('text-slate-300');
+                icon.classList.toggle('text-green-600');
+                
+                // Re-render sidebar to update all progress percentages and stats
+                renderSidebar();
+                
+                // Re-expand the shifts that were previously expanded
+                setTimeout(() => {
+                    expandedShifts.forEach(shiftIndex => {
+                        const elem = document.getElementById(`shift-${shiftIndex}`);
+                        const header = elem?.previousElementSibling;
+                        const icon = header?.querySelector('.expand-icon');
+                        if (elem && header && icon) {
+                            elem.style.visibility = 'visible';
+                            elem.style.maxHeight = elem.scrollHeight + 'px';
+                            icon.style.transform = 'rotate(90deg)';
+                        }
+                    });
+                }, 0);
+            }
+        }
+
+        function toggleExpandAll(shouldExpand) {
+            workflowData.wfDay.shifts.forEach(shift => {
+                const elem = document.getElementById(`shift-${shift.index}`);
+                const header = elem?.previousElementSibling;
+                const icon = header?.querySelector('.expand-icon');
+                
+                if (elem && header && icon) {
+                    if (shouldExpand) {
+                        // Expand
+                        elem.style.visibility = 'visible';
+                        elem.style.maxHeight = elem.scrollHeight + 'px';
+                        icon.style.transform = 'rotate(90deg)';
+                    } else {
+                        // Collapse
+                        elem.style.maxHeight = '0px';
+                        elem.style.visibility = 'hidden';
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+        }
+
+        function showChartTooltip(event, completed, due, delayed) {
+            const barContainer = event.currentTarget;
+            let tooltip = barContainer.querySelector('.chart-tooltip-all');
+            
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'chart-tooltip-all';
+                tooltip.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(31, 41, 55, 0.95);
+                    color: white;
+                    padding: 10px 12px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    z-index: 1000;
+                    pointer-events: none;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                    white-space: nowrap;
+                    border: 1px solid rgba(255,255,255,0.2);
+                `;
+                barContainer.style.position = 'relative';
+                barContainer.appendChild(tooltip);
+            }
+            
+            tooltip.innerHTML = `
+                <div style="line-height: 1.6;">
+                    <div><span style="color: #c0d631;">●</span> Completed: ${completed}</div>
+                    <div><span style="color: #ff7043;">●</span> Due: ${due}</div>
+                    <div><span style="color: #81d4fa;">●</span> Delayed: ${delayed}</div>
+                </div>
+            `;
+            tooltip.style.display = 'block';
+        }
+
+        function hideChartTooltip(event) {
+            const barContainer = event.currentTarget;
+            const tooltip = barContainer.querySelector('.chart-tooltip-all');
+            
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+        }
+
+        function toggleReportSection(event, sectionId) {
+            event.stopPropagation();
+            const section = document.getElementById(sectionId);
+            const icon = event.currentTarget.querySelector('.report-expand-icon i');
+            
+            if (!section) return;
+
+            if (parseFloat(section.style.maxHeight) > 0) {
+                // Collapse
+                section.style.maxHeight = '0px';
+                section.style.overflow = 'hidden';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Expand
+                section.style.overflow = 'visible';
+                section.style.maxHeight = section.scrollHeight + 'px';
+                icon.style.transform = 'rotate(90deg)';
+                // Recalculate for nested content
+                setTimeout(() => {
+                    const newHeight = section.scrollHeight;
+                    section.style.maxHeight = (newHeight + 20) + 'px';
+                }, 100);
+            }
+        }
+
+        function openSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                sidebar.classList.add('slide-in-right');
+                sidebar.style.transform = 'translateX(0)';
+            }, 10);
+
+            renderSidebar();
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.style.transform = 'translateX(100%)';
+            sidebar.classList.remove('slide-in-right');
+            
+            setTimeout(() => {
+                sidebar.classList.add('hidden');
+                overlay.classList.add('hidden');
+            }, 400);
+        }
+
+        // Print/Export Functions
+        function togglePrintDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('printDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function exportAuditReportToCSV() {
+            const data = [];
+            
+            // Title
+            data.push(['WORKFLOW AUDIT REPORT']);
+            data.push([]);
+            
+            // Generated Date
+            data.push(['Generated on:', new Date().toLocaleString()]);
+            data.push([]);
+            
+            // Headers
+            data.push(['Shift', 'Task group', 'Date and Time', 'Task Name', 'Action', 'Current Value', 'New Value']);
+            
+            // Audit Trail Data
+            const auditTrailData = [
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:00', taskName: 'Review Forecast', action: 'Marked as Review', currentValue: '-', newValue: '-' },
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:05', taskName: 'Review Forecast', action: 'Marked as Mandatory', currentValue: 'Optional', newValue: 'Mandatory' },
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:10', taskName: 'Actual Sales', action: 'Marked as Optional', currentValue: 'Mandatory', newValue: 'Optional' },
+                { shift: 'Start of Day', module: 'Food Management', dateTime: '04/07/2026 18:15', taskName: 'Unposted Waste', action: 'Deleted Task', currentValue: 'Unposted Waste', newValue: '-' },
+                { shift: '-', module: '-', dateTime: '04/07/2026 18:20', taskName: '-', action: 'Created New Day Part', currentValue: '-', newValue: 'Mid Day' },
+                { shift: 'Start of Day', module: '-', dateTime: '04/07/2026 18:25', taskName: '-', action: 'Added New Task Group', currentValue: '-', newValue: 'Checklist' },
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:30', taskName: 'Review Payroll Hours', action: 'Updated Role Restrictions', currentValue: 'Enabled for Assistant Manager', newValue: 'Disabled for Assistant Manager' },
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:35', taskName: 'Review Payroll Hours', action: 'Updated Role Restrictions', currentValue: 'Edit Access for Shift Manager', newValue: 'View Only for Shift Managers' },
+                { shift: '-', module: '-', dateTime: '04/07/2026 18:40', taskName: '-', action: 'Deleted Tiles', currentValue: 'Forecasted Sales', newValue: '-' },
+                { shift: '-', module: '-', dateTime: '04/07/2026 18:42', taskName: '-', action: 'Added Tiles', currentValue: '-', newValue: 'Actual Sales' },
+                { shift: '-', module: '-', dateTime: '04/07/2026 18:45', taskName: '-', action: 'Updated Tiles Name', currentValue: 'Time Loss Dollars', newValue: 'Time Loss $' },
+                { shift: 'End of Day', module: 'Labor Management', dateTime: '04/07/2026 19:00', taskName: 'Unposted Invoices', action: 'Marked as Review', currentValue: '-', newValue: '-' },
+                { shift: 'End of Day', module: 'Payroll Management', dateTime: '04/07/2026 19:15', taskName: 'Payroll Summary', action: 'Marked as Mandatory', currentValue: 'Optional', newValue: 'Mandatory' }
+            ];
+            
+            // Add data rows
+            auditTrailData.forEach(row => {
+                data.push([
+                    row.shift,
+                    row.module,
+                    row.dateTime,
+                    row.taskName,
+                    row.action,
+                    row.currentValue,
+                    row.newValue
+                ]);
+            });
+            
+            // Convert to CSV format
+            let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
+            data.forEach(row => {
+                csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+            
+            // Download CSV
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `Workflow_Audit_Report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToCSV() {
+            const data = [];
+            const stats = workflowData.wfDay.stats;
+            const progress = Math.round((stats.completedTasks / stats.totalTasks) * 100);
+
+            // Count total delayed tasks
+            let totalDelayedTasks = 0;
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                        if (isCompleted && task.isDelayed) {
+                            totalDelayedTasks++;
+                        }
+                    });
+                });
+            });
+
+            // Title
+            data.push(['WORKFLOW STATUS REPORT']);
+            data.push([]);
+
+            // Generated Date
+            data.push(['Generated on:', new Date().toLocaleString()]);
+            data.push([]);
+
+            // Summary Section
+            data.push(['=== SUMMARY STATISTICS ===']);
+            data.push(['Total Tasks', stats.totalTasks]);
+            data.push(['Completed Tasks', stats.completedTasks]);
+            data.push(['Pending Tasks', stats.totalTasks - stats.completedTasks]);
+            data.push(['Delayed Tasks', totalDelayedTasks]);
+            data.push(['On-Time Tasks', stats.completedTasks - totalDelayedTasks]);
+            data.push(['Mandatory Tasks', stats.mandatoryTasks]);
+            data.push(['Optional Tasks', stats.optionalTasks]);
+            data.push(['Mandatory Completed', stats.mandatoryCompletedTasks]);
+            data.push(['Optional Completed', stats.optionalCompletedTasks]);
+            data.push(['Progress (%)', progress]);
+            data.push([]);
+
+            // Summary by Shift
+            data.push(['=== SUMMARY BY SHIFT ===']);
+            data.push(['Shift Name', 'Total Tasks', 'Completed', 'Delayed', 'On-Time', 'Pending', 'Mandatory', 'Optional', 'Progress %']);
+            workflowData.wfDay.shifts.forEach(shift => {
+                const shiftProgress = Math.round((shift.stat.completedTasks / shift.stat.totalTasks) * 100);
+                // Count delayed tasks for this shift
+                let shiftDelayedCount = 0;
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                        if (isCompleted && task.isDelayed) {
+                            shiftDelayedCount++;
+                        }
+                    });
+                });
+                data.push([
+                    shift.name,
+                    shift.stat.totalTasks,
+                    shift.stat.completedTasks,
+                    shiftDelayedCount,
+                    shift.stat.completedTasks - shiftDelayedCount,
+                    shift.stat.totalTasks - shift.stat.completedTasks,
+                    shift.stat.mandatoryTasks,
+                    shift.stat.optionalTasks,
+                    shiftProgress
+                ]);
+            });
+            data.push([]);
+
+            // Summary by Module
+            data.push(['=== SUMMARY BY MODULE ===']);
+            data.push(['Shift', 'Module', 'Total Tasks', 'Completed', 'Delayed', 'On-Time', 'Pending', 'Mandatory', 'Optional', 'Progress %']);
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    const modProgress = Math.round((module.stats.completedTasks / module.stats.totalTasks) * 100);
+                    // Count delayed tasks for this module
+                    let moduleDelayedCount = 0;
+                    module.tasks.forEach(task => {
+                        const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                        if (isCompleted && task.isDelayed) {
+                            moduleDelayedCount++;
+                        }
+                    });
+                    data.push([
+                        shift.name,
+                        module.name,
+                        module.stats.totalTasks,
+                        module.stats.completedTasks,
+                        moduleDelayedCount,
+                        module.stats.completedTasks - moduleDelayedCount,
+                        module.stats.totalTasks - module.stats.completedTasks,
+                        module.stats.mandatoryTasks,
+                        module.stats.optionalTasks,
+                        modProgress
+                    ]);
+                });
+            });
+            data.push([]);
+
+            // Detailed Task Data
+            data.push(['=== DETAILED TASK DATA ===']);
+            data.push(['Shift', 'Module', 'Task Name', 'Status', 'Type', 'Pending Records', 'Completion Time', 'Is Delayed', 'Shift Due Time']);
+
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                        data.push([
+                            shift.name,
+                            module.name,
+                            task.name,
+                            isCompleted ? 'COMPLETED' : 'PENDING',
+                            task.mandatory ? 'MANDATORY' : 'OPTIONAL',
+                            task.noOfObjects,
+                            isCompleted && task.completedTime ? task.completedTime : 'N/A',
+                            isCompleted && task.isDelayed ? 'YES' : 'NO',
+                            shift.dueTime
+                        ]);
+                    });
+                });
+            });
+
+            // Convert to CSV format with proper escaping
+            let csvContent = 'data:text/csv;charset=utf-8,\uFEFF'; // BOM for Excel UTF-8
+            csvContent += data.map(row => 
+                row.map(cell => {
+                    // Escape quotes and wrap in quotes if contains comma or quotes
+                    const cellStr = String(cell);
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return `"${cellStr.replace(/"/g, '""')}"`;
+                    }
+                    return `"${cellStr}"`;
+                }).join(',')
+            ).join('\n');
+
+            const link = document.createElement('a');
+            link.setAttribute('href', encodeURI(csvContent));
+            link.setAttribute('download', `workflow-status-${new Date().toISOString().split('T')[0]}.csv`);
+            link.click();
+            
+            closePrintDropdown();
+        }
+
+        function exportToPDF() {
+            // Check if this is being called from a report detail view (Summary or Audit)
+            if (typeof currentReportType !== 'undefined' && (currentReportType === 'summary' || currentReportType === 'audit')) {
+                // Route to report-specific PDF export
+                exportReportToPDF(currentReportType);
+                return;
+            }
+            
+            // Original Status report PDF export
+            const scriptSrc = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            
+            const script = document.createElement('script');
+            script.src = scriptSrc;
+            script.onload = function() {
+                const element = createPDFContent();
+                const opt = {
+                    margin: 10,
+                    filename: `workflow-status-${new Date().toISOString().split('T')[0]}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' }
+                };
+                html2pdf().set(opt).from(element).save();
+            };
+            document.head.appendChild(script);
+            
+            closePrintDropdown();
+        }
+
+        function createPDFContent() {
+            const div = document.createElement('div');
+            div.style.padding = '20px';
+            div.style.fontFamily = 'Arial, sans-serif';
+            div.style.fontSize = '11px';
+            div.style.lineHeight = '1.4';
+
+            // Title
+            const title = document.createElement('h1');
+            title.textContent = 'Workflow Status Report';
+            title.style.fontSize = '20px';
+            title.style.fontWeight = 'bold';
+            title.style.marginBottom = '5px';
+            title.style.color = '#1e293b';
+            div.appendChild(title);
+
+            // Date
+            const date = document.createElement('p');
+            date.textContent = `Generated on: ${new Date().toLocaleString()}`;
+            date.style.fontSize = '10px';
+            date.style.color = '#64748b';
+            date.style.marginBottom = '15px';
+            div.appendChild(date);
+
+            // Summary Stats
+            const summary = document.createElement('div');
+            summary.style.display = 'grid';
+            summary.style.gridTemplateColumns = 'repeat(8, 1fr)';
+            summary.style.gap = '10px';
+            summary.style.marginBottom = '15px';
+
+            // Count delayed tasks
+            let delayedCount = 0;
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                        if (isCompleted && task.isDelayed) {
+                            delayedCount++;
+                        }
+                    });
+                });
+            });
+
+            const stats = [
+                { label: 'Total Tasks', value: workflowData.wfDay.stats.totalTasks, color: '#3b82f6' },
+                { label: 'Completed', value: workflowData.wfDay.stats.completedTasks, color: '#10b981' },
+                { label: 'Pending', value: workflowData.wfDay.stats.totalTasks - workflowData.wfDay.stats.completedTasks, color: '#f59e0b' },
+                { label: 'Mandatory', value: workflowData.wfDay.stats.mandatoryTasks, color: '#ef4444' },
+                { label: 'Optional', value: workflowData.wfDay.stats.optionalTasks, color: '#8b5cf6' },
+                { label: 'Progress', value: Math.round((workflowData.wfDay.stats.completedTasks / workflowData.wfDay.stats.totalTasks) * 100) + '%', color: '#06b6d4' },
+                { label: 'Delayed Tasks', value: delayedCount, color: '#f97316' },
+                { label: 'On-Time', value: workflowData.wfDay.stats.completedTasks - delayedCount, color: '#16a34a' }
+            ];
+
+            stats.forEach(stat => {
+                const box = document.createElement('div');
+                box.style.padding = '8px';
+                box.style.border = `2px solid ${stat.color}`;
+                box.style.borderRadius = '4px';
+                box.style.textAlign = 'center';
+                box.style.backgroundColor = stat.color + '10';
+                
+                const label = document.createElement('div');
+                label.textContent = stat.label;
+                label.style.fontSize = '9px';
+                label.style.color = '#64748b';
+                label.style.marginBottom = '3px';
+                
+                const value = document.createElement('div');
+                value.textContent = stat.value;
+                value.style.fontSize = '14px';
+                value.style.fontWeight = 'bold';
+                value.style.color = stat.color;
+                
+                box.appendChild(label);
+                box.appendChild(value);
+                summary.appendChild(box);
+            });
+            div.appendChild(summary);
+
+            // Detailed Table
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.marginTop = '10px';
+
+            // Table Header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            headerRow.style.backgroundColor = '#1e293b';
+            headerRow.style.color = 'white';
+
+            const headers = ['Shift', 'Module', 'Task Name', 'Status', 'Type', 'Records', 'Completed At', 'Delayed?', 'Due Time'];
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                th.style.padding = '8px';
+                th.style.textAlign = 'left';
+                th.style.fontSize = '10px';
+                th.style.fontWeight = 'bold';
+                th.style.borderBottom = '2px solid #3b82f6';
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Table Body
+            const tbody = document.createElement('tbody');
+            let rowCount = 0;
+
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                        const row = document.createElement('tr');
+                        rowCount++;
+                        row.style.backgroundColor = rowCount % 2 === 0 ? '#f8fafc' : 'white';
+                        row.style.borderBottom = '1px solid #e2e8f0';
+
+                        const rowData = [
+                            shift.name,
+                            module.name,
+                            task.name,
+                            isCompleted ? '✓ Completed' : '◯ Pending',
+                            task.mandatory ? 'M - Mandatory' : 'O - Optional',
+                            task.noOfObjects,
+                            isCompleted && task.completedTime ? task.completedTime : 'Not Completed',
+                            isCompleted && task.isDelayed ? '⚠ YES' : 'No',
+                            shift.dueTime
+                        ];
+
+                        rowData.forEach((cell, index) => {
+                            const td = document.createElement('td');
+                            td.textContent = cell;
+                            td.style.padding = '8px';
+                            td.style.fontSize = '9px';
+                            
+                            // Color coding for status
+                            if (index === 3) {
+                                td.style.fontWeight = 'bold';
+                                td.style.color = isCompleted ? '#10b981' : '#f59e0b';
+                            }
+                            // Color coding for type
+                            if (index === 4) {
+                                td.style.color = task.mandatory ? '#ef4444' : '#8b5cf6';
+                                td.style.fontWeight = '600';
+                            }
+                            // Color coding for completed at (red for not completed)
+                            if (index === 6) {
+                                if (cell === 'Not Completed') {
+                                    td.style.color = '#ef4444';
+                                    td.style.fontWeight = 'bold';
+                                }
+                            }
+                            // Color coding for delayed
+                            if (index === 7) {
+                                if (isCompleted && task.isDelayed) {
+                                    td.style.color = '#f97316';
+                                    td.style.fontWeight = 'bold';
+                                    td.style.backgroundColor = '#fed7aa';
+                                } else if (isCompleted) {
+                                    td.style.color = '#16a34a';
+                                    td.style.fontWeight = 'bold';
+                                }
+                            }
+                            
+                            row.appendChild(td);
+                        });
+                        tbody.appendChild(row);
+                    });
+                });
+            });
+            table.appendChild(tbody);
+            div.appendChild(table);
+
+            return div;
+        }
+
+        function closePrintDropdown() {
+            const dropdown = document.getElementById('printDropdown');
+            dropdown.classList.remove('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('printDropdown');
+            const btn = document.getElementById('printDropdownBtn');
+            if (!btn?.contains(e.target) && !dropdown?.contains(e.target)) {
+                closePrintDropdown();
+            }
+        });
+
+        // Event Listeners
+        document.getElementById('statusBtn').addEventListener('click', openSidebar);
+        document.getElementById('closeSidebarBtn').addEventListener('click', closeSidebar);
+        document.getElementById('reportsBtn').addEventListener('click', openReportsPage);
+
+        // Initialize badge with correct completion status
+        updateHeaderStats();
+
+        // ========== REPORTS FUNCTIONALITY ==========
+        function openReportsPage() {
+            const reportsPageOverlay = document.getElementById('reportsPageOverlay');
+            const reportsPage = document.getElementById('reportsPage');
+            reportsPageOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                reportsPage.classList.remove('hidden');
+                reportsPage.style.transform = 'translateX(0)';
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeReportsPage() {
+            const reportsPageOverlay = document.getElementById('reportsPageOverlay');
+            const reportsPage = document.getElementById('reportsPage');
+            reportsPage.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                reportsPage.classList.add('hidden');
+                reportsPageOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }, 400);
+        }
+
+        let currentReportType = null; // Track which report is currently open
+
+        function openReportDetail(reportType) {
+            const listView = document.getElementById('reportsListView');
+            const detailView = document.getElementById('reportDetailView');
+
+            listView.style.display = 'none';
+            detailView.classList.remove('hidden');
+            
+            currentReportType = reportType; // Store the current report type
+
+            if (reportType === 'summary') {
+                renderWorkflowSummaryReport();
+            } else if (reportType === 'audit') {
+                renderWorkflowAuditReport();
+            }
+        }
+
+        function backToReportsList() {
+            const listView = document.getElementById('reportsListView');
+            const detailView = document.getElementById('reportDetailView');
+            listView.style.display = 'block';
+            detailView.classList.add('hidden');
+        }
+
+        function renderWorkflowSummaryReport() {
+            const detailView = document.getElementById('reportDetailView');
+            const stats = workflowData.wfDay.stats;
+            
+            // Calculate delayed tasks
+            let delayedCount = 0;
+            let delayedCompletionCount = 0;
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        if (task.isDelayed) {
+                            delayedCount++;
+                            if (task.completed) delayedCompletionCount++;
+                        }
+                    });
+                });
+            });
+
+            const progressPercentage = Math.round((stats.completedTasks / stats.totalTasks) * 100);
+            const pendingTasks = stats.totalTasks - stats.completedTasks;
+
+            // Build per-shift data
+            const shiftRows = [];
+            workflowData.wfDay.shifts.forEach(shift => {
+                const shiftTotal = shift.modules.reduce((sum, m) => sum + m.tasks.length, 0);
+                const shiftCompleted = shift.modules.reduce((sum, m) => sum + m.tasks.filter(t => t.completed && !(t.mandatory && t.noOfObjects > 0)).length, 0);
+                const shiftDelayed = shift.modules.reduce((sum, m) => sum + m.tasks.filter(t => t.isDelayed).length, 0);
+                const shiftDelayedCompletion = shift.modules.reduce((sum, m) => sum + m.tasks.filter(t => t.isDelayed && t.completed).length, 0);
+                shiftRows.push({ name: shift.name, total: shiftTotal, completed: shiftCompleted, due: shiftTotal - shiftCompleted, delayed: shiftDelayed, delayedCompletion: shiftDelayedCompletion, pct: shiftTotal > 0 ? Math.round((shiftCompleted / shiftTotal) * 100) : 0, dueTime: shift.dueTime });
+            });
+            const chartMax = Math.max(...shiftRows.map(s => s.total), 1);
+            const chartHeight = 220;
+
+            let html = `
+                <div style="background:#f8f9fa; min-height:100%; padding:24px 32px;">
+
+                    <!-- Report Header with Name and Buttons -->
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:20px;">
+                        <span style="font-size:18px; font-weight:700; color:#1e293b;">Workflow Summary Report</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:7px 14px;font-size:13px;color:#475569;font-weight:500;">
+                                <i class="fas fa-calendar-alt" style="color:#94a3b8;"></i> ${workflowData.date}
+                            </span>
+                            <button class="report-export-btn report-export-csv" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
+                            <button class="report-export-btn report-export-pdf" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                            <button class="report-export-btn" onclick="closeReportsPage()" style="padding:8px 14px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;"><i class="fas fa-arrow-left"></i> Back</button>
+                        </div>
+                    </div>
+
+                    <!-- ======= SECTION: Task Completion (chart left + table right) ======= -->
+                    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:20px 24px 18px; margin-bottom:18px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                            <i class="fas fa-check-circle" style="color:#64748b;font-size:15px;"></i>
+                            <span style="font-size:15px; font-weight:700; color:#334155;">Task Completion</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px;">
+                            <!-- LEFT: stacked bar chart -->
+                            <div style="position:relative;">
+                                <!-- Y axis -->
+                                <div style="position:relative; padding-left:38px; height:${chartHeight + 40}px;">
+                                    <div style="position:absolute;left:0;top:0;bottom:40px;width:34px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;padding-right:6px;">
+                                        <span style="font-size:11px;color:#94a3b8;">${chartMax}</span>
+                                        <span style="font-size:11px;color:#94a3b8;">${Math.round(chartMax*0.8)}</span>
+                                        <span style="font-size:11px;color:#94a3b8;">${Math.round(chartMax*0.6)}</span>
+                                        <span style="font-size:11px;color:#94a3b8;">${Math.round(chartMax*0.4)}</span>
+                                        <span style="font-size:11px;color:#94a3b8;">${Math.round(chartMax*0.2)}</span>
+                                        <span style="font-size:11px;color:#94a3b8;">0</span>
+                                    </div>
+                                    <!-- grid lines -->
+                                    <div style="position:absolute;left:38px;right:0;top:0;bottom:40px;">
+                                        ${[0,0.2,0.4,0.6,0.8,1].map(f => `<div style="position:absolute;left:0;right:0;bottom:${f*100}%;border-bottom:1px solid #f1f5f9;"></div>`).join('')}
+                                    </div>
+                                    <!-- bars -->
+                                    <div style="position:absolute;left:38px;right:0;top:0;bottom:40px;display:flex;align-items:flex-end;gap:12px;padding:0 8px;">`;
+
+            shiftRows.forEach(s => {
+                const completedH = Math.round((s.completed / chartMax) * chartHeight);
+                const dueH = Math.round((s.due / chartMax) * chartHeight);
+                const delayedH = Math.round((s.delayedCompletion / chartMax) * chartHeight);
+                html += `
+                                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;" onmouseover="showChartTooltip(event, ${s.completed}, ${s.due}, ${s.delayedCompletion})" onmouseout="hideChartTooltip(event)">
+                                            <div style="width:100%;display:flex;flex-direction:column-reverse;max-width:56px;margin:0 auto;">
+                                                <div style="height:${completedH}px;background:#c0d631;border-radius:0 0 3px 3px;cursor:pointer;transition:all 0.2s ease;"></div>
+                                                <div style="height:${dueH}px;background:#ff7043;cursor:pointer;transition:all 0.2s ease;"></div>
+                                                <div style="height:${delayedH}px;background:#81d4fa;border-radius:3px 3px 0 0;cursor:pointer;transition:all 0.2s ease;"></div>
+                                            </div>
+                                        </div>`;
+            });
+
+            html += `
+                                    </div>
+                                    <!-- x-axis labels -->
+                                    <div style="position:absolute;left:38px;right:0;bottom:0;height:36px;display:flex;gap:12px;padding:0 8px;">`;
+            shiftRows.forEach(s => {
+                html += `<div style="flex:1;text-align:center;font-size:11px;color:#64748b;padding-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</div>`;
+            });
+            html += `
+                                    </div>
+                                </div>
+                                <!-- legend -->
+                                <div style="display:flex;align-items:center;gap:20px;margin-top:10px;justify-content:center;">
+                                    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#64748b;"><span style="width:12px;height:10px;background:#c0d631;border-radius:2px;display:inline-block;"></span> Completed</span>
+                                    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#64748b;"><span style="width:12px;height:10px;background:#ff7043;border-radius:2px;display:inline-block;"></span> Due</span>
+                                    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#64748b;"><span style="width:12px;height:10px;background:#81d4fa;border-radius:2px;display:inline-block;"></span> Delayed Completion</span>
+                                </div>
+                            </div>
+                            <!-- RIGHT: data table -->
+                            <div style="overflow-x:auto;">
+                                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                    <thead><tr style="border-bottom:2px solid #e2e8f0;">
+                                        <th style="padding:10px 14px;text-align:left;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Shift</th>
+                                        <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Completed</th>
+                                        <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Due</th>
+                                        <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Due Time</th>
+                                        <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Delayed Completion</th>
+                                        <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Total Task</th>
+                                    </tr></thead>
+                                    <tbody>`;
+            shiftRows.forEach((s, i) => {
+                html += `<tr style="border-bottom:1px solid #f1f5f9;${i%2?'background:#fafbfc;':''}">
+                    <td style="padding:10px 14px;font-weight:600;color:#334155;">${s.name}</td>
+                    <td style="padding:10px 14px;text-align:right;color:#334155;" title="Completed: ${s.completed}">${s.completed}</td>
+                    <td style="padding:10px 14px;text-align:right;color:#334155;" title="Due: ${s.due}">${s.due}</td>
+                    <td style="padding:10px 14px;text-align:right;color:#334155;">${s.dueTime || '-'}</td>
+                    <td style="padding:10px 14px;text-align:right;color:#334155;" title="Delayed Completion: ${s.delayedCompletion}">${s.delayedCompletion}</td>
+                    <td style="padding:10px 14px;text-align:right;font-weight:700;color:#334155;" title="Total Tasks: ${s.total}">${s.total}</td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>
+                        </div>
+                    </div>
+
+                    <!-- ======= SECTION: Completion Progress (chart left + table right) ======= -->
+                    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:20px 24px 18px; margin-bottom:18px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                            <i class="fas fa-chart-line" style="color:#64748b;font-size:15px;"></i>
+                            <span style="font-size:15px; font-weight:700; color:#334155;">Completion Progress</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px;">
+                            <!-- LEFT: progress bars stacked -->
+                            <div style="display:flex;flex-direction:column;gap:18px;">
+                                <!-- Overall -->
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                        <span style="font-size:13px;font-weight:600;color:#334155;">Overall Completion</span>
+                                        <span style="font-size:13px;font-weight:700;color:#16a34a;">${progressPercentage}%</span>
+                                    </div>
+                                    <div style="width:100%;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">
+                                        <div style="height:100%;width:${progressPercentage}%;background:#c0d631;border-radius:5px;transition:width .5s;"></div>
+                                    </div>
+                                </div>
+                                <!-- Mandatory -->
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                        <span style="font-size:13px;font-weight:600;color:#334155;">Mandatory Completion</span>
+                                        <span style="font-size:13px;font-weight:700;color:#ef4444;">${stats.mandatoryTasks > 0 ? Math.round((stats.mandatoryCompletedTasks / stats.mandatoryTasks) * 100) : 0}%</span>
+                                    </div>
+                                    <div style="width:100%;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">
+                                        <div style="height:100%;width:${stats.mandatoryTasks > 0 ? (stats.mandatoryCompletedTasks / stats.mandatoryTasks) * 100 : 0}%;background:#ef4444;border-radius:5px;transition:width .5s;"></div>
+                                    </div>
+                                </div>
+                                <!-- Optional -->
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                        <span style="font-size:13px;font-weight:600;color:#334155;">Optional Completion</span>
+                                        <span style="font-size:13px;font-weight:700;color:#6366f1;">${stats.optionalTasks > 0 ? Math.round((stats.optionalCompletedTasks / stats.optionalTasks) * 100) : 0}%</span>
+                                    </div>
+                                    <div style="width:100%;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">
+                                        <div style="height:100%;width:${stats.optionalTasks > 0 ? (stats.optionalCompletedTasks / stats.optionalTasks) * 100 : 0}%;background:#6366f1;border-radius:5px;transition:width .5s;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- RIGHT: summary stat cards -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                                <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;">
+                                    <div style="font-size:24px;font-weight:800;color:#16a34a;">${stats.completedTasks}</div>
+                                    <div style="font-size:11px;color:#64748b;font-weight:600;margin-top:4px;">Completed</div>
+                                </div>
+                                <div style="background:#fff7ed;border-radius:8px;padding:16px;text-align:center;">
+                                    <div style="font-size:24px;font-weight:800;color:#ea580c;">${pendingTasks}</div>
+                                    <div style="font-size:11px;color:#64748b;font-weight:600;margin-top:4px;">Due</div>
+                                </div>
+                                <div style="background:#fef2f2;border-radius:8px;padding:16px;text-align:center;">
+                                    <div style="font-size:24px;font-weight:800;color:#ef4444;">${delayedCount}</div>
+                                    <div style="font-size:11px;color:#64748b;font-weight:600;margin-top:4px;">Delayed</div>
+                                </div>
+                                <div style="background:#eff6ff;border-radius:8px;padding:16px;text-align:center;">
+                                    <div style="font-size:24px;font-weight:800;color:#2563eb;">${stats.totalTasks}</div>
+                                    <div style="font-size:11px;color:#64748b;font-weight:600;margin-top:4px;">Total Tasks</div>
+                                </div>
+                                <div style="background:#fef2f2;border-radius:8px;padding:16px;text-align:center;">
+                                    <div style="font-size:24px;font-weight:800;color:#dc2626;">${stats.mandatoryTasks}</div>
+                                    <div style="font-size:11px;color:#64748b;font-weight:600;margin-top:4px;">Mandatory</div>
+                                </div>
+                                <div style="background:#f5f3ff;border-radius:8px;padding:16px;text-align:center;">
+                                    <div style="font-size:24px;font-weight:800;color:#7c3aed;">${stats.optionalTasks}</div>
+                                    <div style="font-size:11px;color:#64748b;font-weight:600;margin-top:4px;">Optional</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ======= SECTION: Module Summary ======= -->
+                    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:20px 24px 18px; margin-bottom:18px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                            <i class="fas fa-cubes" style="color:#64748b;font-size:15px;"></i>
+                            <span style="font-size:15px; font-weight:700; color:#334155;">Summary by Module</span>
+                        </div>
+                        <div style="overflow-x:auto;">`;
+            workflowData.wfDay.shifts.forEach((shift, shiftIdx) => {
+                const shiftId = `module-shift-${shiftIdx}`;
+                html += `
+                            <div style="margin-bottom:12px;">
+                                <div onclick="toggleReportSection(event, '${shiftId}')" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#f0f4f8; border:1px solid #d1d5db; border-radius:6px; cursor:pointer; transition:all 0.2s ease;">
+                                    <span class="report-expand-icon" style="display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; transform:rotate(0deg); transition:transform 0.2s ease; color:#64748b;"><i class="fas fa-chevron-right"></i></span>
+                                    <span style="font-weight:600; color:#334155; flex:1;">${shift.name}</span>
+                                </div>
+                                <div id="${shiftId}" style="max-height:0; overflow:hidden; transition:max-height 0.3s ease;">
+                                    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:1px;">
+                                        <thead><tr style="border-bottom:2px solid #e2e8f0;">
+                                            <th style="padding:10px 14px;text-align:left;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Module</th>
+                                            <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Total</th>
+                                            <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Completed</th>
+                                            <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Pending</th>
+                                            <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Delayed</th>
+                                            <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Completion %</th>
+                                        </tr></thead>
+                                        <tbody>`;
+                shift.modules.forEach((module, moduleIdx) => {
+                    const mt = module.tasks.length;
+                    const mc = module.tasks.filter(t => t.completed && !(t.mandatory && t.noOfObjects > 0)).length;
+                    const md = module.tasks.filter(t => t.isDelayed).length;
+                    const mp = Math.round((mc / mt) * 100);
+                    html += `<tr style="border-bottom:1px solid #f1f5f9;${moduleIdx%2?'background:#fafbfc;':''}">
+                        <td style="padding:10px 14px;font-weight:600;color:#334155;">${module.name}</td>
+                        <td style="padding:10px 14px;text-align:right;color:#334155;">${mt}</td>
+                        <td style="padding:10px 14px;text-align:right;font-weight:600;color:#16a34a;">${mc}</td>
+                        <td style="padding:10px 14px;text-align:right;font-weight:600;color:#ea580c;">${mt - mc}</td>
+                        <td style="padding:10px 14px;text-align:right;font-weight:600;color:#ef4444;">${md}</td>
+                        <td style="padding:10px 14px;text-align:right;font-weight:700;color:#334155;">${mp}%</td>
+                    </tr>`;
+                });
+                html += `</tbody></table></div></div>`;
+            });
+            html += `</div>
+                    </div>
+
+                    <!-- ======= SECTION: Task Details ======= -->
+                    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:20px 24px 18px; margin-bottom:18px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                            <i class="fas fa-list-check" style="color:#64748b;font-size:15px;"></i>
+                            <span style="font-size:15px; font-weight:700; color:#334155;">Task Details</span>
+                        </div>
+                        <div style="overflow-x:auto;">`;
+            workflowData.wfDay.shifts.forEach((shift, shiftIdx) => {
+                const shiftId = `task-shift-${shiftIdx}`;
+                html += `
+                            <div style="margin-bottom:12px;">
+                                <div onclick="toggleReportSection(event, '${shiftId}')" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#f0f4f8; border:1px solid #d1d5db; border-radius:6px; cursor:pointer; transition:all 0.2s ease;">
+                                    <span class="report-expand-icon" style="display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; transform:rotate(0deg); transition:transform 0.2s ease; color:#64748b;"><i class="fas fa-chevron-right"></i></span>
+                                    <span style="font-weight:600; color:#334155; flex:1;">${shift.name}</span>
+                                </div>
+                                <div id="${shiftId}" style="max-height:0; overflow:hidden; transition:max-height 0.3s ease;">
+                                    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:1px;">
+                                        <thead><tr style="border-bottom:2px solid #e2e8f0;">
+                                            <th style="padding:10px 14px;text-align:left;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Module</th>
+                                            <th style="padding:10px 14px;text-align:left;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Task Name</th>
+                                            <th style="padding:10px 14px;text-align:center;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Status</th>
+                                            <th style="padding:10px 14px;text-align:center;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Type</th>
+                                            <th style="padding:10px 14px;text-align:center;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Completed At</th>
+                                            <th style="padding:10px 14px;text-align:center;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Delayed</th>
+                                            <th style="padding:10px 14px;text-align:right;font-weight:700;color:#475569;font-size:12px;background:#f8fafc;">Records</th>
+                                        </tr></thead>
+                                        <tbody>`;
+                let taskIdx = 0;
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                        // Generate completed timestamp
+                        let completedAtStr = 'Not Completed';
+                        let completedAtColor = '#ef4444';
+                        if (isCompleted) {
+                            // Generate a timestamp using today's date with random time
+                            const today = new Date();
+                            const hour = Math.floor(Math.random() * 12) + 8; // Random hour between 8 AM and 7 PM
+                            const minute = Math.floor(Math.random() * 60);
+                            today.setHours(hour, minute, 0, 0);
+                            
+                            const month = String(today.getMonth() + 1).padStart(2, '0');
+                            const day = String(today.getDate()).padStart(2, '0');
+                            const year = today.getFullYear();
+                            const displayHour = today.getHours() > 12 ? today.getHours() - 12 : (today.getHours() === 0 ? 12 : today.getHours());
+                            const displayMinute = String(today.getMinutes()).padStart(2, '0');
+                            const ampm = today.getHours() >= 12 ? 'PM' : 'AM';
+                            
+                            completedAtStr = `${month}/${day}/${year} ${String(displayHour).padStart(2, '0')}:${displayMinute} ${ampm}`;
+                            completedAtColor = '#16a34a';
+                        }
+                        html += `<tr style="border-bottom:1px solid #f1f5f9;${taskIdx%2?'background:#fafbfc;':''}">
+                            <td style="padding:9px 14px;color:#475569;font-size:12px;">${module.name}</td>
+                            <td style="padding:9px 14px;font-weight:600;color:#334155;">${task.name}</td>
+                            <td style="padding:9px 14px;text-align:center;">
+                                <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;${isCompleted ? 'background:#f0fdf4;color:#16a34a;' : 'background:#fff7ed;color:#ea580c;'}">${isCompleted ? '✓ Completed' : '◯ Pending'}</span>
+                            </td>
+                            <td style="padding:9px 14px;text-align:center;">
+                                <span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;${task.mandatory ? 'background:#fef2f2;color:#ef4444;' : 'background:#f5f3ff;color:#7c3aed;'}">${task.mandatory ? 'Mandatory' : 'Optional'}</span>
+                            </td>
+                            <td style="padding:9px 14px;text-align:center;font-weight:600;color:${completedAtColor};">${completedAtStr}</td>
+                            <td style="padding:9px 14px;text-align:center;">
+                                <span style="font-size:12px;font-weight:600;${task.isDelayed ? 'color:#ef4444;' : 'color:#16a34a;'}">${task.isDelayed ? '⏱ Delayed' : '✓ On Time'}</span>
+                            </td>
+                            <td style="padding:9px 14px;text-align:right;font-weight:600;color:#475569;">${task.noOfObjects}</td>
+                        </tr>`;
+                        taskIdx++;
+                    });
+                });
+                html += `</tbody></table></div></div>`;
+            });
+            html += `</div>
+                    </div>
+
+                </div>`;
+
+            detailView.innerHTML = html;
+        }
+
+        function renderWorkflowAuditReport() {
+            const detailView = document.getElementById('reportDetailView');
+            
+            // Audit Trail Data - All actions captured from JSON
+            const auditTrailData = [
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:00', taskName: 'Review Forecast', action: 'Marked as Review', currentValue: '-', newValue: '-' },
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:05', taskName: 'Review Forecast', action: 'Marked as Mandatory', currentValue: 'Optional', newValue: 'Mandatory' },
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:10', taskName: 'Actual Sales', action: 'Marked as Optional', currentValue: 'Mandatory', newValue: 'Optional' },
+                { shift: 'Start of Day', module: 'Food Management', dateTime: '04/07/2026 18:15', taskName: 'Unposted Waste', action: 'Deleted Task', currentValue: 'Unposted Waste', newValue: '-' },
+                { shift: '-', module: '-', dateTime: '04/07/2026 18:20', taskName: '-', action: 'Created New Day Part', currentValue: '-', newValue: 'Mid Day' },
+                { shift: 'Start of Day', module: '-', dateTime: '04/07/2026 18:25', taskName: '-', action: 'Added New Task Group', currentValue: '-', newValue: 'Checklist' },
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:30', taskName: 'Review Payroll Hours', action: 'Updated Role Restrictions', currentValue: 'Enabled for Assistant Manager', newValue: 'Disabled for Assistant Manager' },
+                { shift: 'Start of Day', module: 'Forecast', dateTime: '04/07/2026 18:35', taskName: 'Review Payroll Hours', action: 'Updated Role Restrictions', currentValue: 'Edit Access for Shift Manager', newValue: 'View Only for Shift Managers' },
+                { shift: '-', module: '-', dateTime: '04/07/2026 18:40', taskName: '-', action: 'Deleted Tiles', currentValue: 'Forecasted Sales', newValue: '-' },
+                { shift: '-', module: '-', dateTime: '04/07/2026 18:42', taskName: '-', action: 'Added Tiles', currentValue: '-', newValue: 'Actual Sales' },
+                { shift: '-', module: '-', dateTime: '04/07/2026 18:45', taskName: '-', action: 'Updated Tiles Name', currentValue: 'Time Loss Dollars', newValue: 'Time Loss $' },
+                { shift: 'End of Day', module: 'Labor Management', dateTime: '04/07/2026 19:00', taskName: 'Unposted Invoices', action: 'Marked as Review', currentValue: '-', newValue: '-' },
+                { shift: 'End of Day', module: 'Payroll Management', dateTime: '04/07/2026 19:15', taskName: 'Payroll Summary', action: 'Marked as Mandatory', currentValue: 'Optional', newValue: 'Mandatory' }
+            ];
+
+            let html = `
+                <div style="background:#f8f9fa; min-height:100%; padding:24px 32px;">
+                    
+                    <!-- Report Header with Name and Buttons -->
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:20px;">
+                        <span style="font-size:18px; font-weight:700; color:#1e293b;">Workflow Audit Report</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px 14px;font-size:13px;color:#475569;font-weight:500;">
+                                <i class="fas fa-calendar-alt" style="color:#94a3b8;"></i> ${workflowData.date}
+                            </span>
+                            <button class="report-export-btn report-export-csv" onclick="exportAuditReportToCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
+                            <button class="report-export-btn report-export-pdf" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                            <button class="report-export-btn" onclick="closeReportsPage()" style="padding:8px 14px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;"><i class="fas fa-arrow-left"></i> Back</button>
+                        </div>
+                    </div>
+
+                    <!-- Audit Trail Table -->
+                    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr style="background:#f8fafc;">
+                                        <th style="padding:14px 16px;text-align:left;font-weight:700;font-size:13px;letter-spacing:0.5px;color:#475569;border-bottom:2px solid #e2e8f0;">Shift</th>
+                                        <th style="padding:14px 16px;text-align:left;font-weight:700;font-size:13px;letter-spacing:0.5px;color:#475569;border-bottom:2px solid #e2e8f0;">Task group</th>
+                                        <th style="padding:14px 16px;text-align:left;font-weight:700;font-size:13px;letter-spacing:0.5px;color:#475569;border-bottom:2px solid #e2e8f0;">Date and Time</th>
+                                        <th style="padding:14px 16px;text-align:left;font-weight:700;font-size:13px;letter-spacing:0.5px;color:#475569;border-bottom:2px solid #e2e8f0;">Task Name</th>
+                                        <th style="padding:14px 16px;text-align:left;font-weight:700;font-size:13px;letter-spacing:0.5px;color:#475569;border-bottom:2px solid #e2e8f0;">Action</th>
+                                        <th style="padding:14px 16px;text-align:left;font-weight:700;font-size:13px;letter-spacing:0.5px;color:#475569;border-bottom:2px solid #e2e8f0;">Current Value</th>
+                                        <th style="padding:14px 16px;text-align:left;font-weight:700;font-size:13px;letter-spacing:0.5px;color:#475569;border-bottom:2px solid #e2e8f0;">New Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+            auditTrailData.forEach((row, idx) => {
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const hoverColor = 'hover';
+                html += `
+                                    <tr style="background-color:${bgColor};border-bottom:1px solid #e2e8f0;transition:all 0.2s ease;" onmouseover="this.style.backgroundColor='#eff6ff'" onmouseout="this.style.backgroundColor='${bgColor}'">
+                                        <td style="padding:12px 16px;font-size:13px;color:#475569;font-weight:500;">${row.shift}</td>
+                                        <td style="padding:12px 16px;font-size:13px;color:#475569;font-weight:500;">${row.module}</td>
+                                        <td style="padding:12px 16px;font-size:13px;color:#64748b;">${row.dateTime}</td>
+                                        <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#334155;">${row.taskName}</td>
+                                        <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#334155;">${row.action}</td>
+                                        <td style="padding:12px 16px;font-size:13px;color:#64748b;">${row.currentValue}</td>
+                                        <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#16a34a;">${row.newValue}</td>
+                                    </tr>`;
+            });
+
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                </div>`;
+
+            detailView.innerHTML = html;
+        }
+
+        function exportReportToCSV(reportType) {
+            let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
+            
+            if (reportType === 'summary') {
+                const stats = workflowData.wfDay.stats;
+                
+                // Calculate delayed count
+                let delayedCount = 0;
+                workflowData.wfDay.shifts.forEach(shift => {
+                    shift.modules.forEach(module => {
+                        module.tasks.forEach(task => {
+                            if (task.isDelayed) delayedCount++;
+                        });
+                    });
+                });
+                
+                // Title
+                csvContent += 'WORKFLOW SUMMARY REPORT\\n';
+                csvContent += `Generated: ${new Date().toLocaleString()}\\n\\n`;
+                
+                // Summary Stats
+                csvContent += 'SUMMARY STATISTICS\\n';
+                csvContent += 'Metric,Value\\n';
+                csvContent += `Total Tasks,${stats.totalTasks}\\n`;
+                csvContent += `Completed Tasks,${stats.completedTasks}\\n`;
+                csvContent += `Pending Tasks,${stats.totalTasks - stats.completedTasks}\\n`;
+                csvContent += `Mandatory Tasks,${stats.mandatoryTasks}\\n`;
+                csvContent += `Optional Tasks,${stats.optionalTasks}\\n`;
+                csvContent += `Delayed Tasks,${delayedCount}\\n`;
+                csvContent += `Completion Percentage,${Math.round((stats.completedTasks / stats.totalTasks) * 100)}%\\n\\n`;
+                
+                // Shift Summary
+                csvContent += 'SUMMARY BY SHIFT\\n';
+                csvContent += 'Shift Name,Total Tasks,Completed,Pending,Delayed,Completion %\\n';
+                
+                workflowData.wfDay.shifts.forEach(shift => {
+                    const shiftTotal = shift.modules.reduce((sum, m) => sum + m.tasks.length, 0);
+                    const shiftCompleted = shift.modules.reduce((sum, m) => sum + m.tasks.filter(t => t.completed && !(t.mandatory && t.noOfObjects > 0)).length, 0);
+                    const shiftDelayed = shift.modules.reduce((sum, m) => sum + m.tasks.filter(t => t.isDelayed).length, 0);
+                    const percentage = Math.round((shiftCompleted / shiftTotal) * 100);
+                    csvContent += `${shift.name},${shiftTotal},${shiftCompleted},${shiftTotal - shiftCompleted},${shiftDelayed},${percentage}%\\n`;
+                });
+                
+                csvContent += '\\n';
+                
+                // Module Summary
+                csvContent += 'SUMMARY BY MODULE\\n';
+                csvContent += 'Shift,Module Name,Total Tasks,Completed,Pending,Delayed,Completion %\\n';
+                
+                workflowData.wfDay.shifts.forEach(shift => {
+                    shift.modules.forEach(module => {
+                        const moduleTotal = module.tasks.length;
+                        const moduleCompleted = module.tasks.filter(t => t.completed && !(t.mandatory && t.noOfObjects > 0)).length;
+                        const moduleDelayed = module.tasks.filter(t => t.isDelayed).length;
+                        const percentage = Math.round((moduleCompleted / moduleTotal) * 100);
+                        csvContent += `${shift.name},${module.name},${moduleTotal},${moduleCompleted},${moduleTotal - moduleCompleted},${moduleDelayed},${percentage}%\\n`;
+                    });
+                });
+                
+                csvContent += '\\n';
+                
+                // Task Details
+                csvContent += 'TASK DETAILS\\n';
+                csvContent += 'Shift,Module,Task Name,Status,Type,Delayed,Records\\n';
+                
+                workflowData.wfDay.shifts.forEach(shift => {
+                    shift.modules.forEach(module => {
+                        module.tasks.forEach(task => {
+                            const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                            csvContent += `${shift.name},${module.name},${task.name},${isCompleted ? 'Completed' : 'Pending'},${task.mandatory ? 'Mandatory' : 'Optional'},${task.isDelayed ? 'Delayed' : 'On Time'},${task.noOfObjects}\\n`;
+                        });
+                    });
+                });
+                
+            } else if (reportType === 'audit') {
+                csvContent += 'WORKFLOW AUDIT REPORT\\n';
+                csvContent += `Generated: ${new Date().toLocaleString()}\\n\\n`;
+                
+                // Calculate delayed count
+                let delayedCount = 0;
+                workflowData.wfDay.shifts.forEach(shift => {
+                    shift.modules.forEach(module => {
+                        module.tasks.forEach(task => {
+                            if (task.isDelayed) delayedCount++;
+                        });
+                    });
+                });
+                
+                // Summary Stats
+                csvContent += 'AUDIT SUMMARY STATISTICS\\n';
+                csvContent += 'Metric,Value\\n';
+                let completedCount = 0;
+                let mandatoryCompletedCount = 0;
+                let optionalCompletedCount = 0;
+                
+                workflowData.wfDay.shifts.forEach(shift => {
+                    shift.modules.forEach(module => {
+                        module.tasks.forEach(task => {
+                            if (task.completed) {
+                                completedCount++;
+                                if (task.mandatory) mandatoryCompletedCount++;
+                                else optionalCompletedCount++;
+                            }
+                        });
+                    });
+                });
+                
+                csvContent += `Tasks Completed,${completedCount}\\n`;
+                csvContent += `Mandatory Completed,${mandatoryCompletedCount}\\n`;
+                csvContent += `Optional Completed,${optionalCompletedCount}\\n`;
+                csvContent += `Delayed Tasks,${delayedCount}\\n`;
+                csvContent += `Total Shifts,${workflowData.wfDay.shifts.length}\\n\\n`;
+                
+                csvContent += 'COMPLETION AUDIT TRAIL\\n';
+                csvContent += 'Shift,Module,Task Name,Status,Type,Delayed,Completed By,Completion Time,Records\\n';
+                
+                workflowData.wfDay.shifts.forEach(shift => {
+                    shift.modules.forEach(module => {
+                        module.tasks.forEach(task => {
+                            if (task.completed) {
+                                const isCompleted = !(task.mandatory && task.noOfObjects > 0);
+                                const completionTime = new Date(Date.now() - Math.random() * 86400000).toLocaleString();
+                                csvContent += `${shift.name},${module.name},${task.name},${isCompleted ? 'Completed' : 'Pending'},${task.mandatory ? 'Mandatory' : 'Optional'},${task.isDelayed ? 'Delayed' : 'On Time'},System User,${completionTime},${task.noOfObjects}\\n`;
+                            }
+                        });
+                    });
+                });
+            }
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `workflow-${reportType}-report-${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportReportToPDF(reportType) {
+            const scriptSrc = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            
+            const script = document.createElement('script');
+            script.src = scriptSrc;
+            script.onload = function() {
+                let element;
+                
+                // Expand all collapsible sections before cloning
+                const collapsibleSections = document.querySelectorAll('[id^="module-shift-"], [id^="task-shift-"]');
+                collapsibleSections.forEach(section => {
+                    section.style.maxHeight = section.scrollHeight + 'px';
+                    section.style.visibility = 'visible';
+                    section.style.overflow = 'visible';
+                });
+                
+                // Rotate all chevrons to expanded state (90deg)
+                const chevrons = document.querySelectorAll('.report-expand-icon');
+                chevrons.forEach(chevron => {
+                    chevron.style.transform = 'rotate(90deg)';
+                });
+                
+                if (reportType === 'summary' || reportType === 'audit') {
+                    // Capture the actual rendered report from the screen
+                    const reportDetailView = document.getElementById('reportDetailView');
+                    if (reportDetailView) {
+                        element = reportDetailView.cloneNode(true);
+                        
+                        // Remove back button and export buttons from the clone
+                        const actionBar = element.querySelector('[style*="display:flex"][style*="justify-content:space-between"][style*="margin-bottom:18px"]');
+                        if (actionBar) {
+                            actionBar.style.display = 'none';
+                        }
+                        
+                        // Create a wrapper with proper styling
+                        const wrapper = document.createElement('div');
+                        wrapper.style.backgroundColor = '#f8f9fa';
+                        wrapper.style.padding = '20px';
+                        wrapper.appendChild(element);
+                        
+                        element = wrapper;
+                    }
+                }
+                
+                if (!element) {
+                    console.error('Could not find report element to export');
+                    return;
+                }
+                
+                const opt = {
+                    margin: 8,
+                    filename: `workflow-${reportType}-report-${new Date().toISOString().split('T')[0]}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, allowTaint: true, useCORS: true },
+                    jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' }
+                };
+                html2pdf().set(opt).from(element).save();
+            };
+            document.head.appendChild(script);
+        }
+
+        function createSummaryReportPDF() {
+            const div = document.createElement('div');
+            div.style.padding = '20px';
+            div.style.fontFamily = 'Arial, sans-serif';
+            div.style.fontSize = '10px';
+
+            const stats = workflowData.wfDay.stats;
+            
+            // Calculate delayed count
+            let delayedCount = 0;
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        if (task.isDelayed) delayedCount++;
+                    });
+                });
+            });
+            
+            // Title
+            const title = document.createElement('h1');
+            title.textContent = 'Workflow Summary Report';
+            title.style.fontSize = '24px';
+            title.style.fontWeight = 'bold';
+            title.style.marginBottom = '5px';
+            title.style.color = '#1e3a8a';
+            div.appendChild(title);
+
+            // Date
+            const date = document.createElement('p');
+            date.textContent = `Generated on: ${new Date().toLocaleString()}`;
+            date.style.fontSize = '10px';
+            date.style.color = '#64748b';
+            date.style.marginBottom = '15px';
+            div.appendChild(date);
+
+            // Summary Stats
+            const summary = document.createElement('div');
+            summary.style.display = 'grid';
+            summary.style.gridTemplateColumns = 'repeat(7, 1fr)';
+            summary.style.gap = '10px';
+            summary.style.marginBottom = '20px';
+
+            const statBoxes = [
+                { label: 'Total Tasks', value: stats.totalTasks, color: '#3b82f6' },
+                { label: 'Completed', value: stats.completedTasks, color: '#10b981' },
+                { label: 'Pending', value: stats.totalTasks - stats.completedTasks, color: '#f59e0b' },
+                { label: 'Mandatory', value: stats.mandatoryTasks, color: '#ef4444' },
+                { label: 'Optional', value: stats.optionalTasks, color: '#8b5cf6' },
+                { label: 'Delayed', value: delayedCount, color: '#ff6b6b' },
+                { label: 'Progress', value: `${Math.round((stats.completedTasks / stats.totalTasks) * 100)}%`, color: '#06b6d4' }
+            ];
+
+            statBoxes.forEach(stat => {
+                const box = document.createElement('div');
+                box.style.padding = '10px';
+                box.style.border = `2px solid ${stat.color}`;
+                box.style.borderRadius = '8px';
+                box.style.textAlign = 'center';
+                
+                const value = document.createElement('div');
+                value.textContent = stat.value;
+                value.style.fontSize = '16px';
+                value.style.fontWeight = 'bold';
+                value.style.color = stat.color;
+                
+                const label = document.createElement('div');
+                label.textContent = stat.label;
+                label.style.fontSize = '9px';
+                label.style.color = '#64748b';
+                label.style.marginTop = '5px';
+                
+                box.appendChild(value);
+                box.appendChild(label);
+                summary.appendChild(box);
+            });
+
+            div.appendChild(summary);
+
+            // Tables Styling
+            const tableStyle = 'border-collapse: collapse; width: 100%; font-size: 9px; margin: 15px 0; page-break-inside: avoid;';
+            const thStyle = 'background: #1e40af; color: white; padding: 8px; text-align: left; font-weight: bold; border: 1px solid #ddd;';
+            const tdStyle = 'padding: 8px; border: 1px solid #ddd;';
+
+            // Task Completion Table
+            const taskCompleteTitle = document.createElement('h3');
+            taskCompleteTitle.textContent = 'Task Completion by Shift';
+            taskCompleteTitle.style.fontSize = '12px';
+            taskCompleteTitle.style.marginTop = '20px';
+            taskCompleteTitle.style.marginBottom = '10px';
+            taskCompleteTitle.style.color = '#1e293b';
+            div.appendChild(taskCompleteTitle);
+
+            const shiftRows = [];
+            workflowData.wfDay.shifts.forEach(shift => {
+                const shiftTotal = shift.modules.reduce((sum, m) => sum + m.tasks.length, 0);
+                const shiftCompleted = shift.modules.reduce((sum, m) => sum + m.tasks.filter(t => t.completed && !(t.mandatory && t.noOfObjects > 0)).length, 0);
+                const shiftDelayed = shift.modules.reduce((sum, m) => sum + m.tasks.filter(t => t.isDelayed).length, 0);
+                const shiftDelayedCompletion = shift.modules.reduce((sum, m) => sum + m.tasks.filter(t => t.isDelayed && t.completed).length, 0);
+                shiftRows.push({ name: shift.name, total: shiftTotal, completed: shiftCompleted, due: shiftTotal - shiftCompleted, delayed: shiftDelayed, delayedCompletion: shiftDelayedCompletion, dueTime: shift.dueTime });
+            });
+
+            const taskCompleteTable = document.createElement('table');
+            taskCompleteTable.style.cssText = tableStyle;
+            
+            const taskCompleteHeader = document.createElement('thead');
+            const taskCompleteHeaderRow = document.createElement('tr');
+            ['Shift', 'Completed', 'Due', 'Due Time', 'Delayed Completion', 'Total Task'].forEach(h => {
+                const th = document.createElement('th');
+                th.textContent = h;
+                th.style.cssText = thStyle;
+                taskCompleteHeaderRow.appendChild(th);
+            });
+            taskCompleteHeader.appendChild(taskCompleteHeaderRow);
+            taskCompleteTable.appendChild(taskCompleteHeader);
+
+            const taskCompleteBody = document.createElement('tbody');
+            shiftRows.forEach((s, idx) => {
+                const row = document.createElement('tr');
+                row.style.backgroundColor = idx % 2 === 0 ? '#f8fafc' : 'white';
+                const cells = [s.name, s.completed, s.due, s.dueTime || '-', s.delayedCompletion, s.total];
+                cells.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+                    td.style.cssText = tdStyle;
+                    row.appendChild(td);
+                });
+                taskCompleteBody.appendChild(row);
+            });
+            taskCompleteTable.appendChild(taskCompleteBody);
+            div.appendChild(taskCompleteTable);
+
+            // Module Summary Table
+            const moduleSummaryTitle = document.createElement('h3');
+            moduleSummaryTitle.textContent = 'Summary by Module';
+            moduleSummaryTitle.style.fontSize = '12px';
+            moduleSummaryTitle.style.marginTop = '20px';
+            moduleSummaryTitle.style.marginBottom = '10px';
+            moduleSummaryTitle.style.color = '#1e293b';
+            div.appendChild(moduleSummaryTitle);
+
+            const moduleSummaryTable = document.createElement('table');
+            moduleSummaryTable.style.cssText = tableStyle;
+            
+            const moduleSummaryHeader = document.createElement('thead');
+            const moduleSummaryHeaderRow = document.createElement('tr');
+            ['Shift', 'Module', 'Total', 'Completed', 'Pending', 'Delayed', 'Completion %'].forEach(h => {
+                const th = document.createElement('th');
+                th.textContent = h;
+                th.style.cssText = thStyle;
+                moduleSummaryHeaderRow.appendChild(th);
+            });
+            moduleSummaryHeader.appendChild(moduleSummaryHeaderRow);
+            moduleSummaryTable.appendChild(moduleSummaryHeader);
+
+            const moduleSummaryBody = document.createElement('tbody');
+            let rowIdx = 0;
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    const mt = module.tasks.length;
+                    const mc = module.tasks.filter(t => t.completed && !(t.mandatory && t.noOfObjects > 0)).length;
+                    const md = module.tasks.filter(t => t.isDelayed).length;
+                    const mp = Math.round((mc / mt) * 100);
+                    
+                    const row = document.createElement('tr');
+                    row.style.backgroundColor = rowIdx % 2 === 0 ? '#f8fafc' : 'white';
+                    const cells = [shift.name, module.name, mt, mc, mt - mc, md, mp + '%'];
+                    cells.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        td.style.cssText = tdStyle;
+                        row.appendChild(td);
+                    });
+                    moduleSummaryBody.appendChild(row);
+                    rowIdx++;
+                });
+            });
+            moduleSummaryTable.appendChild(moduleSummaryBody);
+            div.appendChild(moduleSummaryTable);
+
+            // Detailed Task Details Table
+            const taskDetailsTitle = document.createElement('h3');
+            taskDetailsTitle.textContent = 'Task Details';
+            taskDetailsTitle.style.fontSize = '12px';
+            taskDetailsTitle.style.marginTop = '20px';
+            taskDetailsTitle.style.marginBottom = '10px';
+            taskDetailsTitle.style.color = '#1e293b';
+            div.appendChild(taskDetailsTitle);
+
+            const taskDetailsTable = document.createElement('table');
+            taskDetailsTable.style.cssText = tableStyle;
+            
+            const taskDetailsHeader = document.createElement('thead');
+            const taskDetailsHeaderRow = document.createElement('tr');
+            ['Shift', 'Module', 'Task Name', 'Status', 'Type', 'Delayed', 'Records'].forEach(h => {
+                const th = document.createElement('th');
+                th.textContent = h;
+                th.style.cssText = thStyle;
+                taskDetailsHeaderRow.appendChild(th);
+            });
+            taskDetailsHeader.appendChild(taskDetailsHeaderRow);
+            taskDetailsTable.appendChild(taskDetailsHeader);
+
+            const taskDetailsBody = document.createElement('tbody');
+            let taskRowIdx = 0;
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        const isCompleted = task.completed && !(task.mandatory && task.noOfObjects > 0);
+                        const row = document.createElement('tr');
+                        row.style.backgroundColor = taskRowIdx % 2 === 0 ? '#f8fafc' : 'white';
+                        
+                        const cells = [
+                            shift.name,
+                            module.name,
+                            task.name,
+                            isCompleted ? 'Completed' : 'Pending',
+                            task.mandatory ? 'Mandatory' : 'Optional',
+                            task.isDelayed ? 'Yes' : 'No',
+                            task.noOfObjects
+                        ];
+                        
+                        cells.forEach(cell => {
+                            const td = document.createElement('td');
+                            td.textContent = cell;
+                            td.style.cssText = tdStyle;
+                            row.appendChild(td);
+                        });
+                        taskDetailsBody.appendChild(row);
+                        taskRowIdx++;
+                    });
+                });
+            });
+            taskDetailsTable.appendChild(taskDetailsBody);
+            div.appendChild(taskDetailsTable);
+
+            return div;
+        }
+
+        function createAuditReportPDF() {
+            const div = document.createElement('div');
+            div.style.padding = '20px';
+            div.style.fontFamily = 'Arial, sans-serif';
+
+            // Title
+            const title = document.createElement('h1');
+            title.textContent = 'Workflow Audit Report';
+            title.style.fontSize = '24px';
+            title.style.fontWeight = 'bold';
+            title.style.marginBottom = '5px';
+            title.style.color = '#166534';
+            div.appendChild(title);
+
+            // Date
+            const date = document.createElement('p');
+            date.textContent = `Generated on: ${new Date().toLocaleString()}`;
+            date.style.fontSize = '11px';
+            date.style.color = '#64748b';
+            date.style.marginBottom = '15px';
+            div.appendChild(date);
+
+            // Stats
+            const summary = document.createElement('div');
+            summary.style.display = 'grid';
+            summary.style.gridTemplateColumns = 'repeat(5, 1fr)';
+            summary.style.gap = '10px';
+            summary.style.marginBottom = '20px';
+
+            let totalCompleted = 0;
+            let mandatoryCompleted = 0;
+            let optionalCompleted = 0;
+            let delayedCount = 0;
+
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        if (task.completed) {
+                            totalCompleted++;
+                            if (task.mandatory) mandatoryCompleted++;
+                            else optionalCompleted++;
+                        }
+                        if (task.isDelayed) delayedCount++;
+                    });
+                });
+            });
+
+            const statBoxes = [
+                { label: 'Completed', value: totalCompleted, color: '#15803d' },
+                { label: 'Mandatory', value: mandatoryCompleted, color: '#ef4444' },
+                { label: 'Optional', value: optionalCompleted, color: '#8b5cf6' },
+                { label: 'Delayed', value: delayedCount, color: '#ff6b6b' },
+                { label: 'Audited', value: new Date().toLocaleDateString(), color: '#06b6d4' }
+            ];
+
+            statBoxes.forEach(stat => {
+                const box = document.createElement('div');
+                box.style.padding = '10px';
+                box.style.border = `2px solid ${stat.color}`;
+                box.style.borderRadius = '8px';
+                box.style.textAlign = 'center';
+                
+                const value = document.createElement('div');
+                value.textContent = stat.value;
+                value.style.fontSize = '18px';
+                value.style.fontWeight = 'bold';
+                value.style.color = stat.color;
+                
+                const label = document.createElement('div');
+                label.textContent = stat.label;
+                label.style.fontSize = '11px';
+                label.style.color = '#64748b';
+                label.style.marginTop = '5px';
+                
+                box.appendChild(value);
+                box.appendChild(label);
+                summary.appendChild(box);
+            });
+
+            div.appendChild(summary);
+
+            // Audit Trail Table
+            const tableStyle = 'border-collapse: collapse; width: 100%; font-size: 9px; margin: 15px 0;';
+            const thStyle = 'background: #166534; color: white; padding: 8px; text-align: left; font-weight: bold; border: 1px solid #ddd;';
+            const tdStyle = 'padding: 8px; border: 1px solid #ddd;';
+
+            const table = document.createElement('table');
+            table.style.cssText = tableStyle;
+
+            const header = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            ['Shift', 'Module', 'Task', 'Status', 'Type', 'Delayed', 'Time', 'Records'].forEach(h => {
+                const th = document.createElement('th');
+                th.textContent = h;
+                th.style.cssText = thStyle;
+                headerRow.appendChild(th);
+            });
+            header.appendChild(headerRow);
+            table.appendChild(header);
+
+            const body = document.createElement('tbody');
+            let rowIndex = 0;
+            workflowData.wfDay.shifts.forEach(shift => {
+                shift.modules.forEach(module => {
+                    module.tasks.forEach(task => {
+                        if (task.completed) {
+                            const isCompleted = !(task.mandatory && task.noOfObjects > 0);
+                            const row = document.createElement('tr');
+                            row.style.background = rowIndex % 2 === 0 ? '#f8fafc' : 'white';
+                            
+                            const cells = [
+                                shift.name,
+                                module.name,
+                                task.name,
+                                isCompleted ? '✓ Completed' : '◯ Pending',
+                                task.mandatory ? 'M' : 'O',
+                                task.isDelayed ? '⏱ Delayed' : '✓ On Time',
+                                new Date(Date.now() - Math.random() * 86400000).toLocaleString(),
+                                task.noOfObjects
+                            ];
+                            
+                            cells.forEach((cell, index) => {
+                                const td = document.createElement('td');
+                                td.textContent = cell;
+                                td.style.cssText = tdStyle;
+                                row.appendChild(td);
+                            });
+                            
+                            body.appendChild(row);
+                            rowIndex++;
+                        }
+                    });
+                });
+            });
+            table.appendChild(body);
+            div.appendChild(table);
+
+            return div;
+        }
+
+        // Close on Escape Key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !document.getElementById('sidebar').classList.contains('hidden')) {
+                closeSidebar();
+            }
+        });
+    </script>
+</body>
+</html>
